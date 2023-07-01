@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">ToDo</string>
+    <string name="amount_of_done_task">Выполнено: %s</string>
+    <string name="task_text_placeholder">Что надо сделать...</string>
+    <string name="save_task">Сохранить</string>
+    <string name="delete">Удалить</string>
+    <string name="deadline_text">Сделать до</string>
+    <string name="priority">Важность:</string>
+    <string name="add_new_task">Add new task</string>
+    <string name="network_error_message">Ошибка соединения. Загруженны данные из локального хранилища</string>
+
+    <string-array name="task_priority_type">
+        <item>Нет</item>
+        <item>Низкий</item>
+        <item>!! Высокий</item>
+    </string-array>
+</resources>
