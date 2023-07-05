@@ -8,7 +8,7 @@ import com.example.todo.data.extensions.asDatabaseModel
 import com.example.todo.data.extensions.asDomainModel
 import com.example.todo.model.DatabaseRevision
 import com.example.todo.model.TodoItem
-import com.example.todo.network.*
+import com.example.todo.network.TodoApi
 import com.example.todo.network.models.ServerResponse
 import com.example.todo.network.models.TodoItemListRequest
 import com.example.todo.network.models.TodoItemRequest
@@ -44,9 +44,10 @@ class TodoItemsRepository(
         withContext(Dispatchers.IO) {
             val request = TodoItemRequest(status, item.asDomainModel())
             val response = TodoApi.retrofitService.getServerResponse()
-            TodoApi.retrofitService.addItem( response.revision, request)
+            TodoApi.retrofitService.addItem(response.revision, request)
             synchronizeRevisions()
         }
+
     suspend fun insertItemToDatabase(item: TodoItem) {
         increaseRevisions()
         withContext(Dispatchers.IO) { database.todoAppDao().insertItem(item) }
@@ -54,8 +55,9 @@ class TodoItemsRepository(
 
     suspend fun updateItemToDatabase(item: TodoItem) {
         increaseRevisions()
-        withContext(Dispatchers.IO) { database.todoAppDao().updateItem(item)  }
+        withContext(Dispatchers.IO) { database.todoAppDao().updateItem(item) }
     }
+
     suspend fun deleteItemFromDatabase(item: TodoItem) {
         increaseRevisions()
         withContext(Dispatchers.IO) { database.todoAppDao().deleteItem(item) }
@@ -72,13 +74,15 @@ class TodoItemsRepository(
     private suspend fun synchronizeRevisions() {
         withContext(Dispatchers.IO) {
             val response = TodoApi.retrofitService.getServerResponse()
+
             database.todoAppDao().updateRevision(DatabaseRevision(Constants.REVISION_ID, response.revision))
         }
     }
+
     private suspend fun increaseRevisions() {
         withContext(Dispatchers.IO) {
-            val currentRevision  = database.todoAppDao().getRevision().value
-            database.todoAppDao().updateRevision(DatabaseRevision(Constants.REVISION_ID, currentRevision+1))
+            val currentRevision = database.todoAppDao().getRevision().value
+            database.todoAppDao().updateRevision(DatabaseRevision(Constants.REVISION_ID, currentRevision + 1))
         }
     }
 
