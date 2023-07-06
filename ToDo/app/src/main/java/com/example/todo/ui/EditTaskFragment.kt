@@ -6,8 +6,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.example.todo.Constants
 import com.example.todo.R
@@ -25,24 +28,24 @@ import javax.inject.Inject
 class EditTaskFragment : Fragment() {
     private var _binding: FragmentEditTaskBinding? = null
     private val binding get() = _binding!!
-
     private val _calendar = Calendar.getInstance()
     private var _deadlineDate: Date? = null
     private var _isNewTask = true
-
     private lateinit var _taskID: String
     private lateinit var _item: TodoItem
 
     @Inject
     lateinit var viewModelFactory: EditTaskViewModelFactory
 
-    private val viewModel: EditTaskViewModel by activityViewModels {
+    private val viewModel: EditTaskViewModel by viewModels {
         viewModelFactory
     }
+
     override fun onAttach(context: Context) {
         super.onAttach(context)
         (requireNotNull(this.activity).application as TodoApplication).appComponent.inject(this)
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let { bundle ->
@@ -83,37 +86,49 @@ class EditTaskFragment : Fragment() {
                     _deadlineDate = null
                     binding.deadlineText.text = null
                 }
+                viewModel.setDeadline(_deadlineDate)
             }
 
         }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        viewModel.currentItem.observe(this.viewLifecycleOwner) { item -> _item = item }
+
         viewModel.retrieveItem(_taskID).observe(this.viewLifecycleOwner) { item ->
             if (item != null) {
-                _item = item
+                viewModel.setTask(item)
                 _isNewTask = false
-            } else _item = TodoItem(_taskID, "", TaskPriority.LOW, creationDate = Calendar.getInstance().time)
+            } else
+                viewModel.createNewTask(_taskID)
 
             binding.deleteTaskButton.isEnabled = !_isNewTask
             bind(_item)
-
         }
-
 
 
         binding.topAppBar.setNavigationIcon(R.drawable.ic_close)
         binding.topAppBar.setNavigationOnClickListener { requireActivity().onNavigateUp() }
 
-
+        binding.taskEditText.doOnTextChanged { inputText, _, _, _ ->
+            viewModel.setText(inputText.toString())
+        }
+        binding.prioritySpinner.onSpinnerSelected {
+            viewModel.setPriority(it)
+        }
         binding.topAppBar.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.save_button -> {
                     val stringInTextField = binding.taskEditText.text.toString()
                     if (stringInTextField.isNotBlank()) {
-                        setupTask(stringInTextField)
+                        saveOrUpdateTask()
+
                         val action = EditTaskFragmentDirections.actionEditTaskFragmentToTaskListFragment()
-                        findNavController().navigate(action)
+                        val options = NavOptions.Builder()
+                            .setLaunchSingleTop(true)
+                            .build()
+                        findNavController().navigate(action, options)
                     }
                     true
                 }
@@ -121,7 +136,6 @@ class EditTaskFragment : Fragment() {
                 else -> false
             }
         }
-
     }
 
     override fun onDestroyView() {
@@ -130,31 +144,11 @@ class EditTaskFragment : Fragment() {
     }
 
 
-    private fun createTaskItem(stringInTextField: String) = TodoItem(
-        id = _taskID,
-        text = stringInTextField,
-        creationDate = _calendar.time
-    )
-
-    private fun setupTask(stringInTextField: String) {
-        if (_isNewTask)
-            _item = createTaskItem(stringInTextField)
-
-        _item.text = stringInTextField
-        _item.priority = getTaskPriority(binding.prioritySpinner.selectedItem.toString())
-        _item.deadline = _deadlineDate
-
-
-
+    private fun saveOrUpdateTask() {
         if (_isNewTask)
             viewModel.addTodoItem(_item)
         else
             viewModel.updateTodoItem(_item)
-    }
-
-    private fun updatePriority() {
-        val priorityTypeList = resources.getStringArray(R.array.task_priority_type)
-        binding.prioritySpinner.setSelection(priorityTypeList.indexOf(getPriorityString(_item.priority)))
     }
 
     private fun choseDate(): Date {
@@ -175,20 +169,9 @@ class EditTaskFragment : Fragment() {
         return date;
     }
 
-
     private fun setDateInTextView(date: Date) {
         val dateFormat = SimpleDateFormat(Constants.DATA_PATTERN, Locale.getDefault())
         binding.deadlineText.text = dateFormat.format(date)
-    }
-
-    private fun getTaskPriority(selectedPriority: String): TaskPriority {
-        val priorityTypeList = resources.getStringArray(R.array.task_priority_type)
-
-        return when (selectedPriority) {
-            priorityTypeList[0] -> TaskPriority.MEDIUM
-            priorityTypeList[1] -> TaskPriority.LOW
-            else -> TaskPriority.HIGH
-        }
     }
 
     private fun getPriorityString(priority: TaskPriority): String {
@@ -200,6 +183,4 @@ class EditTaskFragment : Fragment() {
             else -> priorityTypeList[2]
         }
     }
-
-
 }

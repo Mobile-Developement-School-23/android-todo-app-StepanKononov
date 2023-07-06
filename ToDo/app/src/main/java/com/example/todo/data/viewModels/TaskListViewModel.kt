@@ -23,10 +23,14 @@ class TaskListViewModel @Inject constructor(
         refreshDataFromRepository()
     }
 
+
     private var todoItems: LiveData<List<TodoItem>> = itemsRepository.todoItemsList
     private var _eventNetworkError = MutableLiveData(false)
     private var _isNetworkErrorShown = MutableLiveData(false)
+    private var _isDoneTaskHide = MutableLiveData(false)
 
+    val isDoneTaskHide: LiveData<Boolean>
+        get() = _isDoneTaskHide
     val eventNetworkError: LiveData<Boolean>
         get() = _eventNetworkError
     val isNetworkErrorShown: LiveData<Boolean>
@@ -37,6 +41,12 @@ class TaskListViewModel @Inject constructor(
     fun getAllItems(): Flow<List<TodoItem>> = todoItems.asFlow()
     fun onNetworkErrorShown() {
         _isNetworkErrorShown.value = true
+    }
+    fun showAllTasks(){
+        _isDoneTaskHide.value = false
+    }
+    fun hideDoneTasks(){
+        _isDoneTaskHide.value = true
     }
 
     fun getCompleteItemsCount(): LiveData<Int> {
@@ -81,4 +91,5 @@ class TaskListViewModel @Inject constructor(
         _eventNetworkError.value = true
     }
 }
+
 

@@ -31,6 +31,8 @@ class TaskListFragment : Fragment() {
     @Inject
     lateinit var viewModelFactory: TaskListViewModelFactory
 
+    private var items: List<TodoItem>? = null
+
     private val viewModel: TaskListViewModel by activityViewModels {
         viewModelFactory
     }
@@ -98,9 +100,21 @@ class TaskListFragment : Fragment() {
 
         lifecycle.coroutineScope.launch {
             viewModel.getAllItems().collect {
-
-                taskAdapter.submitList(it)
+                items = it
+                if (viewModel.isDoneTaskHide.value!!)
+                    taskAdapter.submitList(items!!.filter { !it.isComplete })
+                else
+                    taskAdapter.submitList(items)
             }
+        }
+        viewModel.isDoneTaskHide.observe(this.viewLifecycleOwner) { isDoneTaskHide ->
+            if (items != null) {
+                if (isDoneTaskHide)
+                    taskAdapter.submitList(items!!.filter { !it.isComplete })
+                else
+                    taskAdapter.submitList(items)
+            }
+
         }
         viewModel.getCompleteItemsCount().observe(this.viewLifecycleOwner) { count ->
             setDoneTaskAmountText(count)
@@ -108,17 +122,9 @@ class TaskListFragment : Fragment() {
 
         binding.hideDoneTaskButton.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                lifecycle.coroutineScope.launch {
-                    viewModel.getAllItems().collect { it ->
-                        taskAdapter.submitList(it.filter { !it.isComplete })
-                    }
-                }
+                viewModel.hideDoneTasks()
             } else {
-                lifecycle.coroutineScope.launch {
-                    viewModel.getAllItems().collect {
-                        taskAdapter.submitList(it)
-                    }
-                }
+                viewModel.showAllTasks()
             }
         }
         val internetConnectionWatcher = InternetConnectionWatcher(requireContext())
