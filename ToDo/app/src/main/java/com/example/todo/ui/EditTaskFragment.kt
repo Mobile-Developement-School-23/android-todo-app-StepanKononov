@@ -11,8 +11,8 @@ import androidx.navigation.fragment.findNavController
 import com.example.todo.Constants
 import com.example.todo.R
 import com.example.todo.TodoApplication
-import com.example.todo.data.viewModels.TodoViewModel
-import com.example.todo.data.viewModels.TodoViewModelFactory
+import com.example.todo.data.viewModels.EditTaskViewModel
+import com.example.todo.data.viewModels.EditTaskViewModelFactory
 import com.example.todo.databinding.FragmentEditTaskBinding
 import com.example.todo.model.TaskPriority
 import com.example.todo.model.TodoItem
@@ -31,11 +31,11 @@ class EditTaskFragment : Fragment() {
     private lateinit var _taskID: String
     private lateinit var _item: TodoItem
 
-    private val viewModel: TodoViewModel by activityViewModels {
+    private val viewModel: EditTaskViewModel by activityViewModels {
         val activity = requireNotNull(this.activity)
-        TodoViewModelFactory(
-            (activity.application as TodoApplication).database.todoAppDao(),
-            activity.application
+        EditTaskViewModelFactory(
+            activity.application,
+            (activity.application as TodoApplication).itemsRepository
         )
     }
 
@@ -55,25 +55,49 @@ class EditTaskFragment : Fragment() {
         return binding.root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        viewModel.retrieveItem(_taskID).observe(this.viewLifecycleOwner) {selectedItem ->
-            if (selectedItem != null){
-                _item = selectedItem
-                _isNewTask = false
+    private fun bind(item: TodoItem) {
+        binding.apply {
+            taskEditText.setText(item.text)
+            val priorityTypeList = resources.getStringArray(R.array.task_priority_type)
+            prioritySpinner.setSelection(priorityTypeList.indexOf(getPriorityString(_item.priority)))
+            deleteTaskButton.setOnClickListener {
+                if (!_isNewTask) {
+                    viewModel.removeItem(_item)
+                    val action = EditTaskFragmentDirections.actionEditTaskFragmentToTaskListFragment()
+                    findNavController().navigate(action)
+                }
             }
+            if (_item.deadline != null) {
+                _deadlineDate = _item.deadline
+                binding.deadlineSwitch.isChecked = true
+                setDateInTextView(_item.deadline!!)
+            }
+            deadlineSwitch.setOnCheckedChangeListener { _, isChecked ->
+                if (isChecked) {
+                    _deadlineDate = choseDate()
+                } else {
+                    _deadlineDate = null
+                    binding.deadlineText.text = null
+                }
+            }
+
+        }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        viewModel.retrieveItem(_taskID).observe(this.viewLifecycleOwner) { item ->
+            if (item != null) {
+                _item = item
+                _isNewTask = false
+            } else _item = TodoItem(_taskID, "", TaskPriority.LOW, creationDate = Calendar.getInstance().time)
+
             binding.deleteTaskButton.isEnabled = !_isNewTask
-            if (!_isNewTask)
-                updateViewForCurrentTask()
-            updateDeadlineView()
+            bind(_item)
+
         }
 
-        binding.deleteTaskButton.setOnClickListener {
-            if (!_isNewTask) {
-                viewModel.removeItem(_item)
-                val action = EditTaskFragmentDirections.actionEditTaskFragmentToTaskListFragment()
-                findNavController().navigate(action)
-            }
-        }
+
+
         binding.topAppBar.setNavigationIcon(R.drawable.ic_close)
         binding.topAppBar.setNavigationOnClickListener { requireActivity().onNavigateUp() }
 
@@ -82,7 +106,7 @@ class EditTaskFragment : Fragment() {
             when (it.itemId) {
                 R.id.save_button -> {
                     val stringInTextField = binding.taskEditText.text.toString()
-                    if (stringInTextField.isNotEmpty()) {
+                    if (stringInTextField.isNotBlank()) {
                         setupTask(stringInTextField)
                         val action = EditTaskFragmentDirections.actionEditTaskFragmentToTaskListFragment()
                         findNavController().navigate(action)
@@ -108,17 +132,6 @@ class EditTaskFragment : Fragment() {
         creationDate = _calendar.time
     )
 
-    private fun updateDeadlineView() {
-        binding.deadlineSwitch.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                _deadlineDate = choseDate()
-            } else {
-                _deadlineDate = null
-                binding.deadlineText.text = null
-            }
-        }
-    }
-
     private fun setupTask(stringInTextField: String) {
         if (_isNewTask)
             _item = createTaskItem(stringInTextField)
@@ -133,18 +146,6 @@ class EditTaskFragment : Fragment() {
             viewModel.addTodoItem(_item)
         else
             viewModel.updateTodoItem(_item)
-    }
-
-    private fun updateViewForCurrentTask() {
-
-        binding.taskEditText.setText(_item.text)
-
-        updatePriority()
-
-        if (_item.deadline != null) {
-            binding.deadlineSwitch.isChecked = true
-            setDateInTextView(_item.deadline!!)
-        }
     }
 
     private fun updatePriority() {
@@ -170,11 +171,11 @@ class EditTaskFragment : Fragment() {
         return date;
     }
 
+
     private fun setDateInTextView(date: Date) {
         val dateFormat = SimpleDateFormat(Constants.DATA_PATTERN, Locale.getDefault())
         binding.deadlineText.text = dateFormat.format(date)
     }
-
 
     private fun getTaskPriority(selectedPriority: String): TaskPriority {
         val priorityTypeList = resources.getStringArray(R.array.task_priority_type)

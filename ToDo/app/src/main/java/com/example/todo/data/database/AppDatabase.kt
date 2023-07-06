@@ -7,10 +7,10 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.example.todo.data.DateConverter
 import com.example.todo.model.DatabaseRevision
-import com.example.todo.model.TodoItem
+import com.example.todo.model.TodoItemEntity
 
 
-@Database(entities = [TodoItem::class, DatabaseRevision::class], version = 1)
+@Database(entities = [TodoItemEntity::class, DatabaseRevision::class], version = 1)
 @TypeConverters(DateConverter::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun todoAppDao(): TodoAppDao

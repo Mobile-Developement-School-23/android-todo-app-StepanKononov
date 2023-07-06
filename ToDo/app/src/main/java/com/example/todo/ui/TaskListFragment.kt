@@ -15,8 +15,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.todo.R
 import com.example.todo.TodoApplication
 import com.example.todo.adapter.ItemTaskListAdapter
-import com.example.todo.data.viewModels.TodoViewModel
-import com.example.todo.data.viewModels.TodoViewModelFactory
+import com.example.todo.data.viewModels.TaskListViewModel
+import com.example.todo.data.viewModels.TaskListViewModelFactory
 import com.example.todo.databinding.FragmentTaskListBinding
 import com.example.todo.model.TodoItem
 import com.example.todo.network.InternetConnectionWatcher
@@ -31,11 +31,12 @@ class TaskListFragment : Fragment() {
     private var _binding: FragmentTaskListBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: TodoViewModel by activityViewModels {
+    private val viewModel: TaskListViewModel by activityViewModels {
         val activity = requireNotNull(this.activity)
-        TodoViewModelFactory(
+        TaskListViewModelFactory(
             (activity.application as TodoApplication).database.todoAppDao(),
-            activity.application
+            activity.application,
+            (activity.application as TodoApplication).itemsRepository
         )
     }
 

@@ -6,8 +6,6 @@ import androidx.lifecycle.*
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.todo.Constants
-import com.example.todo.data.database.AppDatabase.Companion.getDatabase
-import com.example.todo.data.database.TodoAppDao
 import com.example.todo.model.TodoItem
 import com.example.todo.workers.SynchronizeWorker
 import kotlinx.coroutines.flow.Flow
@@ -16,16 +14,16 @@ import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
-class TodoViewModel(
-    private val todoAppDao: TodoAppDao,
-    application: Application,
-    private val itemsRepository: TodoItemsRepository = TodoItemsRepository(getDatabase(application)),
+class TaskListViewModel(
+    private val application: Application,
+    private val itemsRepository: TodoItemsRepository,
     private val workManager: WorkManager = WorkManager.getInstance(application)
 ) : AndroidViewModel(application) {
 
     init {
         refreshDataFromRepository()
     }
+
     private val workRequest =
         PeriodicWorkRequestBuilder<SynchronizeWorker>(Constants.SYNCHRONIZE_INTERVAL_HOURS, TimeUnit.HOURS)
             .build()
@@ -38,15 +36,14 @@ class TodoViewModel(
         get() = _eventNetworkError
     val isNetworkErrorShown: LiveData<Boolean>
         get() = _isNetworkErrorShown
+    
 
-    fun retrieveItem(id: String): LiveData<TodoItem> = todoAppDao.getItemById(id).asLiveData()
     fun updateTodoItem(todoItem: TodoItem) = updateItem(todoItem)
     fun getAllItems(): Flow<List<TodoItem>> = todoItems.asFlow()
-    fun addTodoItem(todoItem: TodoItem) = insertItem(todoItem)
-    fun removeItem(todoItem: TodoItem) = deleteItem(todoItem)
     fun onNetworkErrorShown() {
         _isNetworkErrorShown.value = true
     }
+
     fun getCompleteItemsCount(): LiveData<Int> {
         return getAllItems().map { items ->
             items.count { it.isComplete }
@@ -79,31 +76,6 @@ class TodoViewModel(
         }
     }
 
-    private fun deleteItem(item: TodoItem) {
-        viewModelScope.launch {
-            itemsRepository.deleteItemFromDatabase(item)
-            try {
-                itemsRepository.deleteItemFromService(item)
-                onSuccessResponse()
-            } catch (e: Exception) {
-                onUnsuccessfulResponse()
-                Log.v("deleteItem", e.message.toString())
-            }
-        }
-    }
-
-    private fun insertItem(item: TodoItem) {
-        viewModelScope.launch {
-            itemsRepository.insertItemToDatabase(item)
-            try {
-                itemsRepository.insertItemToServer(item)
-                onSuccessResponse()
-            } catch (e: Exception) {
-                onUnsuccessfulResponse()
-                Log.v("insertItem", e.message.toString())
-            }
-        }
-    }
 
     private fun onSuccessResponse() {
         _eventNetworkError.value = false

@@ -6,20 +6,25 @@ import com.example.todo.Constants
 import com.example.todo.data.database.AppDatabase
 import com.example.todo.data.extensions.asDatabaseModel
 import com.example.todo.data.extensions.asDomainModel
-import com.example.todo.model.DatabaseRevision
-import com.example.todo.model.TodoItem
+import com.example.todo.model.*
 import com.example.todo.network.TodoApi
 import com.example.todo.network.models.ServerResponse
 import com.example.todo.network.models.TodoItemListRequest
 import com.example.todo.network.models.TodoItemRequest
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 class TodoItemsRepository(
     private val database: AppDatabase,
 ) {
     private val status = "ok"
-    val todoItemsList: LiveData<List<TodoItem>> = database.todoAppDao().getAllItems().asLiveData()
+    val todoItemsList: LiveData<List<TodoItem>> =
+        database.todoAppDao().getAllItems().map { it.asExternalModels() }.asLiveData()
+
+    fun retrieveItem(id: String): LiveData<TodoItem?> =
+        database.todoAppDao().getItemById(id).map { it?.asExternalModel() }.asLiveData()
+
     suspend fun refreshData() {
         withContext(Dispatchers.IO) {
             val request = TodoApi.retrofitService.getServerResponse()
@@ -50,17 +55,17 @@ class TodoItemsRepository(
 
     suspend fun insertItemToDatabase(item: TodoItem) {
         increaseRevisions()
-        withContext(Dispatchers.IO) { database.todoAppDao().insertItem(item) }
+        withContext(Dispatchers.IO) { database.todoAppDao().insertItem(item.asEntity()) }
     }
 
     suspend fun updateItemToDatabase(item: TodoItem) {
         increaseRevisions()
-        withContext(Dispatchers.IO) { database.todoAppDao().updateItem(item) }
+        withContext(Dispatchers.IO) { database.todoAppDao().updateItem(item.asEntity()) }
     }
 
     suspend fun deleteItemFromDatabase(item: TodoItem) {
         increaseRevisions()
-        withContext(Dispatchers.IO) { database.todoAppDao().deleteItem(item) }
+        withContext(Dispatchers.IO) { database.todoAppDao().deleteItem(item.asEntity()) }
     }
 
 
@@ -101,7 +106,7 @@ class TodoItemsRepository(
         if (itemsFromDatabase.isNullOrEmpty()) {
             database.todoAppDao().insertAll(itemsFromServer)
         } else {
-            mergeData(itemsFromDatabase, itemsFromServer)
+            mergeData(itemsFromDatabase, itemsFromServer.asExternalModels())
         }
     }
 
