@@ -8,6 +8,7 @@ import androidx.room.TypeConverters
 import com.example.todo.data.DateConverter
 import com.example.todo.model.DatabaseRevision
 import com.example.todo.model.TodoItemEntity
+import javax.inject.Inject
 
 
 @Database(entities = [TodoItemEntity::class, DatabaseRevision::class], version = 1)

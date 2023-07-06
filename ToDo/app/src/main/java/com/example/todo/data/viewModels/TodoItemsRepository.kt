@@ -14,9 +14,13 @@ import com.example.todo.network.models.TodoItemRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class TodoItemsRepository(
+@Singleton
+class TodoItemsRepository @Inject constructor(
     private val database: AppDatabase,
+    private val todoApi: TodoApi
 ) {
     private val status = "ok"
     val todoItemsList: LiveData<List<TodoItem>> =
@@ -27,7 +31,7 @@ class TodoItemsRepository(
 
     suspend fun refreshData() {
         withContext(Dispatchers.IO) {
-            val request = TodoApi.retrofitService.getServerResponse()
+            val request = todoApi.retrofitService.getServerResponse()
             val localRevision = database.todoAppDao().getRevision().value
             if (localRevision > request.revision) {
                 updateServerFromDatabase(request)
@@ -41,15 +45,15 @@ class TodoItemsRepository(
     suspend fun updateItemToService(item: TodoItem) =
         withContext(Dispatchers.IO) {
             val request = TodoItemRequest(status, item.asDomainModel())
-            val response = TodoApi.retrofitService.getServerResponse()
-            TodoApi.retrofitService.updateItem(item.id, response.revision, request)
+            val response = todoApi.retrofitService.getServerResponse()
+            todoApi.retrofitService.updateItem(item.id, response.revision, request)
         }
 
     suspend fun insertItemToServer(item: TodoItem) =
         withContext(Dispatchers.IO) {
             val request = TodoItemRequest(status, item.asDomainModel())
-            val response = TodoApi.retrofitService.getServerResponse()
-            TodoApi.retrofitService.addItem(response.revision, request)
+            val response = todoApi.retrofitService.getServerResponse()
+            todoApi.retrofitService.addItem(response.revision, request)
             synchronizeRevisions()
         }
 
@@ -71,14 +75,14 @@ class TodoItemsRepository(
 
     suspend fun deleteItemFromService(item: TodoItem) =
         withContext(Dispatchers.IO) {
-            val response = TodoApi.retrofitService.getServerResponse()
-            TodoApi.retrofitService.deleteItem(item.id, response.revision)
+            val response = todoApi.retrofitService.getServerResponse()
+            todoApi.retrofitService.deleteItem(item.id, response.revision)
         }
 
 
     private suspend fun synchronizeRevisions() {
         withContext(Dispatchers.IO) {
-            val response = TodoApi.retrofitService.getServerResponse()
+            val response = todoApi.retrofitService.getServerResponse()
 
             database.todoAppDao().updateRevision(DatabaseRevision(Constants.REVISION_ID, response.revision))
         }
@@ -95,7 +99,7 @@ class TodoItemsRepository(
         val items = todoItemsList.value
         if (!items.isNullOrEmpty()) {
             val currentRequest = TodoItemListRequest(status, items.map { it.asDomainModel() })
-            TodoApi.retrofitService.patchItemList(request.revision, currentRequest)
+            todoApi.retrofitService.patchItemList(request.revision, currentRequest)
         }
     }
 

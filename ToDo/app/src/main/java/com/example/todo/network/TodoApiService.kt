@@ -9,6 +9,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.*
 import java.util.*
+import javax.inject.Inject
+import javax.inject.Singleton
 
 
 private const val BASE_URL = "https://beta.mrdekk.ru/todobackend/"
@@ -50,12 +52,14 @@ interface TodoApiService {
         @Header("X-Last-Known-Revision") revision: Int,
         @Body itemRequest: TodoItemRequest
     )
+
     @Headers("Authorization: Bearer unformulable")
     @DELETE("list/{id}")
     suspend fun deleteItem(
         @Path("id") id: String,
         @Header("X-Last-Known-Revision") revision: Int
     )
+
     @Headers("Authorization: Bearer unformulable")
     @PATCH("list")
     suspend fun patchItemList(
@@ -64,7 +68,8 @@ interface TodoApiService {
     )
 }
 
-object TodoApi {
+@Singleton
+class TodoApi @Inject constructor() {
     val retrofitService: TodoApiService by lazy {
         retrofit.create(TodoApiService::class.java)
     }

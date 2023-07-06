@@ -4,16 +4,18 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.todo.model.TodoItem
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class EditTaskViewModel(
+class EditTaskViewModel @Inject constructor(
     application: Application,
     private val itemsRepository: TodoItemsRepository
 ) : AndroidViewModel(application) {
 
-
+    private val _currentItem = MutableLiveData<TodoItem>()
 
     fun addTodoItem(todoItem: TodoItem) = insertItem(todoItem)
     fun removeItem(todoItem: TodoItem) = deleteItem(todoItem)

@@ -1,5 +1,6 @@
 package com.example.todo.ui
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -23,21 +24,26 @@ import com.example.todo.network.InternetConnectionWatcher
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import java.util.*
+import javax.inject.Inject
 
 
 class TaskListFragment : Fragment() {
+    @Inject
+    lateinit var viewModelFactory: TaskListViewModelFactory
+
+    private val viewModel: TaskListViewModel by activityViewModels {
+        viewModelFactory
+    }
 
 
     private var _binding: FragmentTaskListBinding? = null
+
     private val binding get() = _binding!!
 
-    private val viewModel: TaskListViewModel by activityViewModels {
-        val activity = requireNotNull(this.activity)
-        TaskListViewModelFactory(
-            (activity.application as TodoApplication).database.todoAppDao(),
-            activity.application,
-            (activity.application as TodoApplication).itemsRepository
-        )
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        (requireNotNull(this.activity).application as TodoApplication).appComponent.inject(this)
     }
 
     override fun onCreateView(
@@ -45,7 +51,6 @@ class TaskListFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-
         _binding = FragmentTaskListBinding.inflate(inflater, container, false)
         val view = binding.root
 

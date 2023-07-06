@@ -1,6 +1,7 @@
 package com.example.todo.ui
 
 import android.app.DatePickerDialog
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -18,6 +19,7 @@ import com.example.todo.model.TaskPriority
 import com.example.todo.model.TodoItem
 import java.text.SimpleDateFormat
 import java.util.*
+import javax.inject.Inject
 
 
 class EditTaskFragment : Fragment() {
@@ -31,14 +33,16 @@ class EditTaskFragment : Fragment() {
     private lateinit var _taskID: String
     private lateinit var _item: TodoItem
 
-    private val viewModel: EditTaskViewModel by activityViewModels {
-        val activity = requireNotNull(this.activity)
-        EditTaskViewModelFactory(
-            activity.application,
-            (activity.application as TodoApplication).itemsRepository
-        )
-    }
+    @Inject
+    lateinit var viewModelFactory: EditTaskViewModelFactory
 
+    private val viewModel: EditTaskViewModel by activityViewModels {
+        viewModelFactory
+    }
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        (requireNotNull(this.activity).application as TodoApplication).appComponent.inject(this)
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let { bundle ->

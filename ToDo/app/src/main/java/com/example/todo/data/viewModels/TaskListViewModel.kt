@@ -3,30 +3,25 @@ package com.example.todo.data.viewModels
 import android.app.Application
 import android.util.Log
 import androidx.lifecycle.*
-import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
-import com.example.todo.Constants
 import com.example.todo.model.TodoItem
-import com.example.todo.workers.SynchronizeWorker
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.io.IOException
-import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
-class TaskListViewModel(
-    private val application: Application,
+class TaskListViewModel @Inject constructor(
+    application: Application,
     private val itemsRepository: TodoItemsRepository,
-    private val workManager: WorkManager = WorkManager.getInstance(application)
+    private val workManager: WorkManager,
+    private val workRequest: PeriodicWorkRequest
 ) : AndroidViewModel(application) {
 
     init {
         refreshDataFromRepository()
     }
-
-    private val workRequest =
-        PeriodicWorkRequestBuilder<SynchronizeWorker>(Constants.SYNCHRONIZE_INTERVAL_HOURS, TimeUnit.HOURS)
-            .build()
 
     private var todoItems: LiveData<List<TodoItem>> = itemsRepository.todoItemsList
     private var _eventNetworkError = MutableLiveData(false)
@@ -36,7 +31,7 @@ class TaskListViewModel(
         get() = _eventNetworkError
     val isNetworkErrorShown: LiveData<Boolean>
         get() = _isNetworkErrorShown
-    
+
 
     fun updateTodoItem(todoItem: TodoItem) = updateItem(todoItem)
     fun getAllItems(): Flow<List<TodoItem>> = todoItems.asFlow()

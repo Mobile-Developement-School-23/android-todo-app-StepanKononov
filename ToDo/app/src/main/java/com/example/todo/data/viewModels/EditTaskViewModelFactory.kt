@@ -1,19 +1,24 @@
 package com.example.todo.data.viewModels
 
-import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.todo.data.database.TodoAppDao
+import javax.inject.Inject
+import javax.inject.Provider
 
-class EditTaskViewModelFactory(
-    private val app: Application,
-    private val repository: TodoItemsRepository
+class EditTaskViewModelFactory @Inject constructor(
+    modelProvider: Provider<EditTaskViewModel>
 ) : ViewModelProvider.Factory {
+
+    private val providers = mapOf<Class<*>, Provider<out ViewModel>>(
+        EditTaskViewModel::class.java to modelProvider
+    )
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(EditTaskViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return EditTaskViewModel(app, repository) as T
+            return providers[modelClass]!!.get() as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
+
+
