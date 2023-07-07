@@ -1,8 +1,8 @@
 package com.example.todo.data.extensions
 
-import com.example.todo.model.TaskPriority
-import com.example.todo.model.TodoItem
-import com.example.todo.model.TodoItemEntity
+import com.example.todo.data.model.TaskPriority
+import com.example.todo.data.model.TodoItem
+import com.example.todo.data.model.TodoItemEntity
 import com.example.todo.network.models.TodoItemResponse
 import java.util.*
 
@@ -26,9 +26,9 @@ fun List<TodoItemResponse>.asDatabaseModel(): List<TodoItemEntity> {
 
 fun TodoItem.asDomainModel(): TodoItemResponse {
     val importance = when (priority) {
-        TaskPriority.LOW -> TodoItemResponse.Importance.low
-        TaskPriority.MEDIUM -> TodoItemResponse.Importance.basic
-        TaskPriority.HIGH -> TodoItemResponse.Importance.important
+        com.example.todo.data.model.TaskPriority.LOW -> TodoItemResponse.Importance.low
+        com.example.todo.data.model.TaskPriority.MEDIUM -> TodoItemResponse.Importance.basic
+        com.example.todo.data.model.TaskPriority.HIGH -> TodoItemResponse.Importance.important
     }
 
     return TodoItemResponse(

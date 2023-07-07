@@ -1,4 +1,4 @@
-package com.example.todo.data.viewModels
+package com.example.todo.data
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.asLiveData
@@ -6,7 +6,7 @@ import com.example.todo.Constants
 import com.example.todo.data.database.AppDatabase
 import com.example.todo.data.extensions.asDatabaseModel
 import com.example.todo.data.extensions.asDomainModel
-import com.example.todo.model.*
+import com.example.todo.data.model.*
 import com.example.todo.network.TodoApi
 import com.example.todo.network.models.ServerResponse
 import com.example.todo.network.models.TodoItemListRequest
@@ -57,6 +57,12 @@ class TodoItemsRepository @Inject constructor(
             synchronizeRevisions()
         }
 
+    suspend fun deleteItemFromService(item: TodoItem) =
+        withContext(Dispatchers.IO) {
+            val response = todoApi.retrofitService.getServerResponse()
+            todoApi.retrofitService.deleteItem(item.id, response.revision)
+        }
+
     suspend fun insertItemToDatabase(item: TodoItem) {
         increaseRevisions()
         withContext(Dispatchers.IO) { database.todoAppDao().insertItem(item.asEntity()) }
@@ -72,18 +78,9 @@ class TodoItemsRepository @Inject constructor(
         withContext(Dispatchers.IO) { database.todoAppDao().deleteItem(item.asEntity()) }
     }
 
-
-    suspend fun deleteItemFromService(item: TodoItem) =
-        withContext(Dispatchers.IO) {
-            val response = todoApi.retrofitService.getServerResponse()
-            todoApi.retrofitService.deleteItem(item.id, response.revision)
-        }
-
-
     private suspend fun synchronizeRevisions() {
         withContext(Dispatchers.IO) {
             val response = todoApi.retrofitService.getServerResponse()
-
             database.todoAppDao().updateRevision(DatabaseRevision(Constants.REVISION_ID, response.revision))
         }
     }
@@ -103,7 +100,6 @@ class TodoItemsRepository @Inject constructor(
         }
     }
 
-
     private suspend fun updateDatabaseFromServer(request: ServerResponse) {
         val itemsFromServer = request.list.asDatabaseModel()
         val itemsFromDatabase = todoItemsList.value
@@ -114,7 +110,7 @@ class TodoItemsRepository @Inject constructor(
         }
     }
 
-    private suspend fun TodoItemsRepository.mergeData(
+    private suspend fun mergeData(
         itemsFromDatabase: List<TodoItem>,
         itemsFromServer: List<TodoItem>
     ) {
@@ -132,6 +128,4 @@ class TodoItemsRepository @Inject constructor(
         }
     }
 }
-
-
 

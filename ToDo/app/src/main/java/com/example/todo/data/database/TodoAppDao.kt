@@ -1,8 +1,8 @@
 package com.example.todo.data.database
 
 import androidx.room.*
-import com.example.todo.model.DatabaseRevision
-import com.example.todo.model.TodoItemEntity
+import com.example.todo.data.model.DatabaseRevision
+import com.example.todo.data.model.TodoItemEntity
 import kotlinx.coroutines.flow.Flow
 
 

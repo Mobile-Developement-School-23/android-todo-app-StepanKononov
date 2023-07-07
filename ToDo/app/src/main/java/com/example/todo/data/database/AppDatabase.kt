@@ -4,8 +4,8 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.example.todo.data.DateConverter
-import com.example.todo.model.DatabaseRevision
-import com.example.todo.model.TodoItemEntity
+import com.example.todo.data.model.DatabaseRevision
+import com.example.todo.data.model.TodoItemEntity
 import javax.inject.Singleton
 
 @Singleton

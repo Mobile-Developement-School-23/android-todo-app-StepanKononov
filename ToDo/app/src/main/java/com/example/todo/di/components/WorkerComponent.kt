@@ -1,5 +1,6 @@
-package com.example.todo.di
+package com.example.todo.di.components
 
+import com.example.todo.di.scope.ActivityScope
 import com.example.todo.workers.SynchronizeWorker
 import dagger.Subcomponent
 
@@ -11,5 +12,6 @@ interface WorkerComponent {
     interface Factory {
         fun create(): WorkerComponent
     }
+
     fun inject(work: SynchronizeWorker)
 }

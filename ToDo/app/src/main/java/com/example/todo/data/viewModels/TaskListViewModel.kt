@@ -5,7 +5,8 @@ import android.util.Log
 import androidx.lifecycle.*
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
-import com.example.todo.model.TodoItem
+import com.example.todo.data.TodoItemsRepository
+import com.example.todo.data.model.TodoItem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -27,10 +28,11 @@ class TaskListViewModel @Inject constructor(
     private var todoItems: LiveData<List<TodoItem>> = itemsRepository.todoItemsList
     private var _eventNetworkError = MutableLiveData(false)
     private var _isNetworkErrorShown = MutableLiveData(false)
-    private var _isDoneTaskHide = MutableLiveData(false)
+    private var _isDoneTaskHide = false
 
-    val isDoneTaskHide: LiveData<Boolean>
+    val isDoneTaskHide
         get() = _isDoneTaskHide
+
     val eventNetworkError: LiveData<Boolean>
         get() = _eventNetworkError
     val isNetworkErrorShown: LiveData<Boolean>
@@ -42,11 +44,13 @@ class TaskListViewModel @Inject constructor(
     fun onNetworkErrorShown() {
         _isNetworkErrorShown.value = true
     }
-    fun showAllTasks(){
-        _isDoneTaskHide.value = false
+
+    fun showAllTasks() {
+        _isDoneTaskHide = false
     }
-    fun hideDoneTasks(){
-        _isDoneTaskHide.value = true
+
+    fun hideDoneTasks() {
+        _isDoneTaskHide = true
     }
 
     fun getCompleteItemsCount(): LiveData<Int> {

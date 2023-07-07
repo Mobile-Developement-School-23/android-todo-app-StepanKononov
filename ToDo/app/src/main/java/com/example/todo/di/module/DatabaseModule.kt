@@ -1,4 +1,4 @@
-package com.example.todo.di
+package com.example.todo.di.module
 
 import android.content.Context
 import androidx.room.Room

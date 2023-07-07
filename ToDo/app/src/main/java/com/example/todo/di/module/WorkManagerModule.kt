@@ -1,4 +1,4 @@
-package com.example.todo.di
+package com.example.todo.di.module
 
 import android.app.Application
 import androidx.work.PeriodicWorkRequest

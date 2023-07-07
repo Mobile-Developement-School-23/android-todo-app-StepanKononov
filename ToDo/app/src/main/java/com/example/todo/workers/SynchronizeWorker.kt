@@ -6,8 +6,8 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.todo.TodoApplication
 import com.example.todo.data.database.AppDatabase
-import com.example.todo.data.viewModels.TodoItemsRepository
-import com.example.todo.di.ActivityScope
+import com.example.todo.data.TodoItemsRepository
+import com.example.todo.di.scope.ActivityScope
 import javax.inject.Inject
 
 

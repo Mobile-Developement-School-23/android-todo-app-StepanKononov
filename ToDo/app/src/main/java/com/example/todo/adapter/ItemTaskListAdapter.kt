@@ -9,9 +9,9 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.todo.Constants
 import com.example.todo.R
+import com.example.todo.data.model.TaskPriority
+import com.example.todo.data.model.TodoItem
 import com.example.todo.databinding.TaskItemBinding
-import com.example.todo.model.TaskPriority
-import com.example.todo.model.TodoItem
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -51,18 +51,20 @@ class ItemTaskListAdapter(
         }
     }
 
-    // Todo вынести onCompleteClicked (да и вообще bind перенести )
     class ItemTaskViewHolder(
         private var binding: TaskItemBinding,
         private val onCompleteClicked: (TodoItem, Boolean) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
+
         fun bind(todoItem: TodoItem) {
-            binding.isDoneCheckBox.setOnCheckedChangeListener { _, isChecked ->
-                onCompleteClicked(todoItem, isChecked)
-                updateCheckBoxView(todoItem, binding)
+            binding.apply {
+                isDoneCheckBox.setOnCheckedChangeListener { _, isChecked ->
+                    onCompleteClicked(todoItem, isChecked)
+                    updateCheckBoxView(todoItem, binding)
+                }
+                taskText.text = todoItem.text
+                isDoneCheckBox.isChecked = todoItem.isComplete
             }
-            binding.taskText.text = todoItem.text
-            binding.isDoneCheckBox.isChecked = todoItem.isComplete
             updatePriorityIcon(todoItem, binding)
             updateCheckBoxView(todoItem, binding)
 
@@ -70,14 +72,15 @@ class ItemTaskListAdapter(
                 binding.deadlineText.text = getDataString(todoItem.deadline!!)
         }
 
-        // TODO тут скореее что-то через стили текста или тип того
         private fun updateCheckBoxView(
             item: TodoItem,
             binding: TaskItemBinding
-        ) = if (item.isComplete) {
-            binding.taskText.paintFlags = binding.taskText.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
-        } else {
-            binding.taskText.paintFlags = binding.taskText.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+        ) {
+            if (item.isComplete) {
+                binding.taskText.paintFlags = binding.taskText.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+            } else {
+                binding.taskText.paintFlags = binding.taskText.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+            }
         }
 
         private fun updatePriorityIcon(
@@ -87,20 +90,21 @@ class ItemTaskListAdapter(
             if (item.priority != TaskPriority.MEDIUM) {
                 binding.priorityIcon.visibility = View.VISIBLE
                 binding.priorityIcon.setImageResource(chosePriorityImage(item))
-            } else binding.priorityIcon.visibility = View.GONE
+            } else {
+                binding.priorityIcon.visibility = View.GONE
+            }
         }
 
-        private fun chosePriorityImage(item: TodoItem): Int =
-            when (item.priority) {
+        private fun chosePriorityImage(item: TodoItem): Int {
+            return when (item.priority) {
                 TaskPriority.LOW -> R.drawable.ic_arrow_downward
                 else -> R.drawable.ic_priority_high
             }
+        }
 
         private fun getDataString(date: Date): String {
             val dateFormat = SimpleDateFormat(Constants.DATA_PATTERN, Locale.getDefault())
             return dateFormat.format(date)
         }
     }
-
 }
-

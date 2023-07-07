@@ -5,8 +5,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.todo.model.TaskPriority
-import com.example.todo.model.TodoItem
+import com.example.todo.data.TodoItemsRepository
+import com.example.todo.data.model.TaskPriority
+import com.example.todo.data.model.TodoItem
 import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
@@ -16,11 +17,10 @@ class EditTaskViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _currentItem = MutableLiveData<TodoItem>()
+    val currentItem get() = _currentItem
+
     private var _isNewItem = true
-    val currentItem: LiveData<TodoItem>
-        get() = _currentItem
-    val isNewItem
-        get() = _isNewItem
+    val isNewItem get() = _isNewItem
 
     fun itemNotNew() {
         _isNewItem = false

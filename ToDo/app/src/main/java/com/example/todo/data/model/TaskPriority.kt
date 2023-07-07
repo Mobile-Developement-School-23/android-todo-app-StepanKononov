@@ -1,4 +1,4 @@
-package com.example.todo.model
+package com.example.todo.data.model
 
 import android.content.res.Resources
 import com.example.todo.R

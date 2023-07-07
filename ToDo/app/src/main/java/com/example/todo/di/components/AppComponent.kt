@@ -1,13 +1,14 @@
-package com.example.todo.di
+package com.example.todo.di.components
 
 import android.app.Application
 import android.content.Context
 import com.example.todo.data.database.AppDatabase
+import com.example.todo.di.module.DatabaseModule
+import com.example.todo.di.module.PeriodicWorkRequestModule
+import com.example.todo.di.module.WorkManagerModule
 import com.example.todo.network.TodoApi
 import dagger.BindsInstance
 import dagger.Component
-import dagger.Module
-import javax.inject.Scope
 import javax.inject.Singleton
 
 @Singleton
@@ -31,15 +32,4 @@ interface AppComponent {
     fun fragmentComponent(): FragmentComponent.Factory
     fun workerComponent(): WorkerComponent.Factory
 }
-
-@Scope
-@MustBeDocumented
-@Retention(value = AnnotationRetention.RUNTIME)
-annotation class FragmentScope
-@Scope
-@MustBeDocumented
-@Retention(value = AnnotationRetention.RUNTIME)
-annotation class ActivityScope
-@Module(subcomponents = [FragmentComponent::class, WorkerComponent::class])
-class AppSubcomponents
 

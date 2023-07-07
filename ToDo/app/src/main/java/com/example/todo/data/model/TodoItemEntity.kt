@@ -1,11 +1,10 @@
-package com.example.todo.model
+package com.example.todo.data.model
 
 import androidx.annotation.NonNull
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.util.*
-import kotlin.collections.List
 
 @Entity(tableName = "todo_items")
 data class TodoItemEntity(
