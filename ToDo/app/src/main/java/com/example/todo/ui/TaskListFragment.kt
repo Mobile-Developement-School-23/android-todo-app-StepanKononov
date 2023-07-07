@@ -2,7 +2,6 @@ package com.example.todo.ui
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,6 +18,8 @@ import com.example.todo.adapter.ItemTaskListAdapter
 import com.example.todo.data.viewModels.TaskListViewModel
 import com.example.todo.data.viewModels.TaskListViewModelFactory
 import com.example.todo.databinding.FragmentTaskListBinding
+import com.example.todo.di.FragmentComponent
+import com.example.todo.di.FragmentScope
 import com.example.todo.model.TodoItem
 import com.example.todo.network.InternetConnectionWatcher
 import com.google.android.material.snackbar.Snackbar
@@ -26,26 +27,27 @@ import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
 
-
+@FragmentScope
 class TaskListFragment : Fragment() {
+
     @Inject
     lateinit var viewModelFactory: TaskListViewModelFactory
-
-    private var items: List<TodoItem>? = null
-
+    private lateinit var fragmentComponent: FragmentComponent
     private val viewModel: TaskListViewModel by activityViewModels {
         viewModelFactory
     }
 
-
     private var _binding: FragmentTaskListBinding? = null
-
     private val binding get() = _binding!!
+
+    private var items: List<TodoItem>? = null
 
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        (requireNotNull(this.activity).application as TodoApplication).appComponent.inject(this)
+        val application = (requireNotNull(this.activity).application as TodoApplication)
+        fragmentComponent = application.appComponent.fragmentComponent().create()
+        fragmentComponent.inject(this)
     }
 
     override fun onCreateView(
@@ -54,8 +56,10 @@ class TaskListFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentTaskListBinding.inflate(inflater, container, false)
-        val view = binding.root
+        return binding.root
+    }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
         binding.addTaskButton.setOnClickListener {
             val action = TaskListFragmentDirections.actionTaskListFragmentToEditTaskFragment(
@@ -68,11 +72,6 @@ class TaskListFragment : Fragment() {
             if (isNetworkError)
                 onNetworkError()
         }
-
-        return view
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
         val recyclerView = binding.tasksRecyclerView
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -151,8 +150,7 @@ class TaskListFragment : Fragment() {
         _binding = null
     }
 
-    fun setDoneTaskAmountText(doneTaskAmount: Int) {
-        Log.v("TASK", doneTaskAmount.toString())
+    private fun setDoneTaskAmountText(doneTaskAmount: Int) {
         binding.amountDoneTasksText.text =
             getString(R.string.amount_of_done_task, doneTaskAmount.toString())
     }

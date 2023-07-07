@@ -1,10 +1,9 @@
 package com.example.todo.data.viewModels
 
-import android.app.Application
 import android.util.Log
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.todo.model.TaskPriority
 import com.example.todo.model.TodoItem
@@ -13,38 +12,50 @@ import java.util.*
 import javax.inject.Inject
 
 class EditTaskViewModel @Inject constructor(
-    application: Application,
     private val itemsRepository: TodoItemsRepository
-) : AndroidViewModel(application) {
+) : ViewModel() {
 
     private val _currentItem = MutableLiveData<TodoItem>()
-
+    private var _isNewItem = true
     val currentItem: LiveData<TodoItem>
         get() = _currentItem
+    val isNewItem
+        get() = _isNewItem
 
-    fun addTodoItem(todoItem: TodoItem) = insertItem(todoItem)
+    fun itemNotNew() {
+        _isNewItem = false
+    }
+
     fun removeItem(todoItem: TodoItem) = deleteItem(todoItem)
-    fun updateTodoItem(todoItem: TodoItem) = updateItem(todoItem)
     fun retrieveItem(id: String): LiveData<TodoItem?> =
         itemsRepository.retrieveItem(id)
 
+    fun saveOrUpdateTask(item: TodoItem) {
+        if (_isNewItem)
+            insertItem(item)
+        else
+            updateItem(item)
+    }
+
     fun createNewTask(id: String) {
-        if ( _currentItem.value == null)
+        if (_currentItem.value == null)
             _currentItem.value = TodoItem(id, "", TaskPriority.MEDIUM, creationDate = Calendar.getInstance().time)
     }
-    fun setTask(todoItem: TodoItem){
+
+    fun setTask(todoItem: TodoItem) {
         _currentItem.value = todoItem
     }
 
-    fun setText(text: String){
+
+    fun setText(text: String) {
         _currentItem.value?.text = text
     }
 
-    fun setDeadline(date: Date?){
+    fun setDeadline(date: Date?) {
         _currentItem.value?.deadline = date
     }
 
-    fun setPriority(priorityIndex: Int){
+    fun setPriority(priorityIndex: Int) {
         _currentItem.value?.priority = getTaskPriority(priorityIndex)
     }
 
@@ -80,6 +91,7 @@ class EditTaskViewModel @Inject constructor(
             }
         }
     }
+
     private fun getTaskPriority(selectedPriorityIndex: Int): TaskPriority {
         return when (selectedPriorityIndex) {
             0 -> TaskPriority.MEDIUM
@@ -87,7 +99,6 @@ class EditTaskViewModel @Inject constructor(
             else -> TaskPriority.HIGH
         }
     }
-
 }
 
 

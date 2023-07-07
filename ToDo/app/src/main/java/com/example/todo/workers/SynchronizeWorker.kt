@@ -7,11 +7,13 @@ import androidx.work.WorkerParameters
 import com.example.todo.TodoApplication
 import com.example.todo.data.database.AppDatabase
 import com.example.todo.data.viewModels.TodoItemsRepository
+import com.example.todo.di.ActivityScope
 import javax.inject.Inject
 
 
 private const val TAG = "SynchronizeWorker"
 
+@ActivityScope
 class SynchronizeWorker(
     ctx: Context,
     params: WorkerParameters
@@ -35,7 +37,7 @@ class SynchronizeWorker(
 
     private fun injectDependencies() {
         val component = (applicationContext as TodoApplication).appComponent
-        component.inject(this)
+        component.workerComponent().create().inject(this)
     }
 
 }
