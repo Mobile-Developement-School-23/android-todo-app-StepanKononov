@@ -1,49 +1,54 @@
 package com.example.todo.ui
 
-import android.app.DatePickerDialog
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.todo.Constants
 import com.example.todo.R
 import com.example.todo.TodoApplication
-import com.example.todo.data.viewModels.TodoViewModel
-import com.example.todo.data.viewModels.TodoViewModelFactory
+import com.example.todo.data.model.TodoItem
+import com.example.todo.data.model.toPriorityString
+import com.example.todo.data.viewModels.EditTaskViewModel
+import com.example.todo.data.viewModels.factory.EditTaskViewModelFactory
 import com.example.todo.databinding.FragmentEditTaskBinding
-import com.example.todo.model.TaskPriority
-import com.example.todo.model.TodoItem
+import com.example.todo.di.components.FragmentComponent
+import com.example.todo.di.scope.FragmentScope
+import com.google.android.material.datepicker.MaterialDatePicker
 import java.text.SimpleDateFormat
 import java.util.*
+import javax.inject.Inject
 
-
+@FragmentScope
 class EditTaskFragment : Fragment() {
+    @Inject
+    lateinit var viewModelFactory: EditTaskViewModelFactory
+    private val viewModel: EditTaskViewModel by viewModels {
+        viewModelFactory
+    }
+    private lateinit var fragmentComponent: FragmentComponent
+
     private var _binding: FragmentEditTaskBinding? = null
     private val binding get() = _binding!!
 
-    private val _calendar = Calendar.getInstance()
-    private var _deadlineDate: Date? = null
-    private var _isNewTask = true
-
     private lateinit var _taskID: String
     private lateinit var _item: TodoItem
-
-    private val viewModel: TodoViewModel by activityViewModels {
-        val activity = requireNotNull(this.activity)
-        TodoViewModelFactory(
-            (activity.application as TodoApplication).database.todoAppDao(),
-            activity.application
-        )
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let { bundle ->
             _taskID = bundle.getString(Constants.TASK_ID).toString()
         }
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        injectDependencies()
     }
 
     override fun onCreateView(
@@ -56,44 +61,38 @@ class EditTaskFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        viewModel.retrieveItem(_taskID).observe(this.viewLifecycleOwner) {selectedItem ->
-            if (selectedItem != null){
-                _item = selectedItem
-                _isNewTask = false
-            }
-            binding.deleteTaskButton.isEnabled = !_isNewTask
-            if (!_isNewTask)
-                updateViewForCurrentTask()
-            updateDeadlineView()
-        }
+        super.onViewCreated(view, savedInstanceState)
 
-        binding.deleteTaskButton.setOnClickListener {
-            if (!_isNewTask) {
+        viewModel.currentItem.observe(this.viewLifecycleOwner) { item -> _item = item }
+        viewModel.retrieveItem(_taskID).observe(this.viewLifecycleOwner) { item ->
+            if (item != null) {
+                viewModel.setTask(item)
+                viewModel.itemNotNew()
+            } else
+                viewModel.createNewTask(_taskID)
+            bindTaskItem(_item)
+            bindViewsToViewModel()
+            bindTopAppBar()
+        }
+    }
+
+    private fun bindViewsToViewModel() {
+        binding.apply {
+            taskEditText.doOnTextChanged { inputText, _, _, _ -> viewModel.setText(inputText.toString()) }
+            prioritySpinner.onSpinnerSelected(viewModel::setPriority)
+
+            deleteTaskButton.setOnClickListener {
                 viewModel.removeItem(_item)
-                val action = EditTaskFragmentDirections.actionEditTaskFragmentToTaskListFragment()
-                findNavController().navigate(action)
+                navigateToTaskListFragment()
             }
-        }
-        binding.topAppBar.setNavigationIcon(R.drawable.ic_close)
-        binding.topAppBar.setNavigationOnClickListener { requireActivity().onNavigateUp() }
-
-
-        binding.topAppBar.setOnMenuItemClickListener {
-            when (it.itemId) {
-                R.id.save_button -> {
-                    val stringInTextField = binding.taskEditText.text.toString()
-                    if (stringInTextField.isNotEmpty()) {
-                        setupTask(stringInTextField)
-                        val action = EditTaskFragmentDirections.actionEditTaskFragmentToTaskListFragment()
-                        findNavController().navigate(action)
-                    }
-                    true
+            deadlineSwitch.setOnCheckedChangeListener { _, isChecked ->
+                if (isChecked) {
+                    showDatePickerDialog()
+                } else {
+                    clearDeadlineView()
                 }
-
-                else -> false
             }
         }
-
     }
 
     override fun onDestroyView() {
@@ -101,73 +100,77 @@ class EditTaskFragment : Fragment() {
         _binding = null
     }
 
-
-    private fun createTaskItem(stringInTextField: String) = TodoItem(
-        id = _taskID,
-        text = stringInTextField,
-        creationDate = _calendar.time
-    )
-
-    private fun updateDeadlineView() {
-        binding.deadlineSwitch.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                _deadlineDate = choseDate()
-            } else {
-                _deadlineDate = null
-                binding.deadlineText.text = null
+    private fun bindTopAppBar() {
+        binding.topAppBar.apply {
+            setNavigationIcon(R.drawable.ic_close)
+            setNavigationOnClickListener { requireActivity().onNavigateUp() }
+            setOnMenuItemClickListener { menuItem ->
+                chooseMenuAction(menuItem.itemId)
             }
         }
     }
 
-    private fun setupTask(stringInTextField: String) {
-        if (_isNewTask)
-            _item = createTaskItem(stringInTextField)
-
-        _item.text = stringInTextField
-        _item.priority = getTaskPriority(binding.prioritySpinner.selectedItem.toString())
-        _item.deadline = _deadlineDate
-
-
-
-        if (_isNewTask)
-            viewModel.addTodoItem(_item)
-        else
-            viewModel.updateTodoItem(_item)
+    private fun bindTaskItem(item: TodoItem) {
+        binding.taskEditText.setText(item.text)
+        binding.deleteTaskButton.isEnabled = !viewModel.isNewItem
+        bindPrioritySpinner()
+        bindDeadlineView(item.deadline)
     }
 
-    private fun updateViewForCurrentTask() {
-
-        binding.taskEditText.setText(_item.text)
-
-        updatePriority()
-
-        if (_item.deadline != null) {
+    private fun bindDeadlineView(deadline: Date?) {
+        if (deadline != null) {
             binding.deadlineSwitch.isChecked = true
             setDateInTextView(_item.deadline!!)
         }
     }
 
-    private fun updatePriority() {
+    private fun bindPrioritySpinner() {
         val priorityTypeList = resources.getStringArray(R.array.task_priority_type)
-        binding.prioritySpinner.setSelection(priorityTypeList.indexOf(getPriorityString(_item.priority)))
+        binding.prioritySpinner.setSelection(priorityTypeList.indexOf(_item.priority.toPriorityString(resources)))
     }
 
-    private fun choseDate(): Date {
-        var date = Date()
-        val datePickerDialog = DatePickerDialog(
-            requireContext(),
-            { _, curYear, monthOfYear, dayOfMonth ->
-                val calendar = GregorianCalendar(curYear, monthOfYear, dayOfMonth)
-                date = calendar.time
-                setDateInTextView(date)
-            },
-            _calendar.get(Calendar.YEAR),
-            _calendar.get(Calendar.MONTH),
-            _calendar.get(Calendar.DAY_OF_MONTH)
-        )
-        datePickerDialog.show()
+    private fun chooseMenuAction(itemId: Int) =
+        when (itemId) {
+            R.id.save_button -> {
+                saveTask()
+                navigateToTaskListFragment()
+                true
+            }
 
-        return date;
+            else -> false
+        }
+
+    private fun saveTask() {
+        val stringInTextField = binding.taskEditText.text.toString()
+        if (stringInTextField.isNotBlank()) {
+            viewModel.saveOrUpdateTask(_item)
+        }
+    }
+
+    private fun showDatePickerDialog() {
+        val builder = MaterialDatePicker.Builder.datePicker()
+        val picker = builder.build()
+        picker.addOnPositiveButtonClickListener { timestamp ->
+            val calendar = Calendar.getInstance()
+            calendar.timeInMillis = timestamp
+            updateDeadline(calendar.time)
+        }
+        picker.show(parentFragmentManager, picker.toString())
+    }
+
+    private fun updateDeadline(date: Date) {
+        viewModel.setDeadline(date)
+        setDateInTextView(date)
+    }
+
+    private fun navigateToTaskListFragment() {
+        val action = EditTaskFragmentDirections.actionEditTaskFragmentToTaskListFragment()
+        findNavController().navigate(action)
+    }
+
+    private fun clearDeadlineView() {
+        viewModel.setDeadline(null)
+        binding.deadlineText.text = null
     }
 
     private fun setDateInTextView(date: Date) {
@@ -175,26 +178,9 @@ class EditTaskFragment : Fragment() {
         binding.deadlineText.text = dateFormat.format(date)
     }
 
-
-    private fun getTaskPriority(selectedPriority: String): TaskPriority {
-        val priorityTypeList = resources.getStringArray(R.array.task_priority_type)
-
-        return when (selectedPriority) {
-            priorityTypeList[0] -> TaskPriority.MEDIUM
-            priorityTypeList[1] -> TaskPriority.LOW
-            else -> TaskPriority.HIGH
-        }
+    private fun injectDependencies() {
+        val application = (requireNotNull(this.activity).application as TodoApplication)
+        fragmentComponent = application.appComponent.fragmentComponent().create()
+        fragmentComponent.inject(this)
     }
-
-    private fun getPriorityString(priority: TaskPriority): String {
-        val priorityTypeList = resources.getStringArray(R.array.task_priority_type)
-
-        return when (priority) {
-            TaskPriority.MEDIUM -> priorityTypeList[0]
-            TaskPriority.LOW -> priorityTypeList[1]
-            else -> priorityTypeList[2]
-        }
-    }
-
-
 }
