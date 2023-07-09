@@ -8,6 +8,7 @@
     <string name="priority">Важность:</string>
     <string name="add_new_task">Add new task</string>
     <string name="network_error_message">Ошибка соединения. Загруженны данные из локального хранилища</string>
+    <string name="task_list_title">Мои дела</string>
 
     <string-array name="task_priority_type">
         <item>Нет</item>

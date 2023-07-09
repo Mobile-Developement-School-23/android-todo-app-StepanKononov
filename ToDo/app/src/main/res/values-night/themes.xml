@@ -2,15 +2,24 @@
     <!-- Base application theme. -->
     <style name="Theme.ToDo" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/purple_200</item>
+        <item name="colorPrimary">@color/dark_gray</item>
         <item name="colorPrimaryVariant">@color/purple_700</item>
         <item name="colorOnPrimary">@color/black</item>
         <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/violet</item>
+        <item name="colorSecondary">@color/blue</item>
         <item name="colorSecondaryVariant">@color/violet</item>
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="android:statusBarColor">@color/dark_gray</item>
         <!-- Customize your theme here. -->
+        <item name="back_secondary">@color/dark_gray</item>
+        <item name="on_back_secondary">@color/dark_gray_second</item>
+        <item name="button_active_background">@color/red</item>
+        <item name="button_background">@color/dark_gray_elevated</item>
+        <item name="close_button_background">@color/dark_gray_elevated</item>
+
+        <item name="checkboxStyle">@style/Widget.App.CheckBox</item>
+        <item name="buttonStyle">@style/Button.DeleteTaskButton</item>
+        <item name="materialCalendarTheme">@style/ThemeOverlay.App.DatePicker</item>
     </style>
 </resources>

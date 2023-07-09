@@ -9,12 +9,20 @@
               android:label="fragment_task_list"
               tools:layout="@layout/fragment_task_list">
 
-        <action android:id="@+id/action_taskListFragment_to_editTaskFragment" app:destination="@id/editTaskFragment"/>
-        <action android:id="@+id/action_taskListFragment_to_editTaskFragment2" app:destination="@id/editTaskFragment"/>
+        <action android:id="@+id/action_taskListFragment_to_editTaskFragment" app:destination="@id/editTaskFragment"
+                app:enterAnim="@anim/slide_in" app:exitAnim="@anim/slide_out"
+                app:popEnterAnim="@anim/slide_in" app:popExitAnim="@anim/slide_out"/>
+        <action android:id="@+id/action_taskListFragment_to_editTaskFragment2" app:destination="@id/editTaskFragment"
+                app:enterAnim="@anim/slide_in" app:exitAnim="@anim/slide_out"
+                app:popEnterAnim="@anim/slide_in"
+                app:popExitAnim="@anim/slide_out"/>
     </fragment>
     <fragment android:id="@+id/editTaskFragment" android:name="com.example.todo.ui.EditTaskFragment"
               android:label="fragment_edit_task" tools:layout="@layout/fragment_edit_task">
-        <action android:id="@+id/action_editTaskFragment_to_taskListFragment" app:destination="@id/taskListFragment"/>
+        <action android:id="@+id/action_editTaskFragment_to_taskListFragment" app:destination="@id/taskListFragment"
+                app:enterAnim="@anim/slide_in" app:exitAnim="@anim/slide_out"
+                app:popEnterAnim="@anim/slide_in"
+                app:popExitAnim="@anim/slide_out"/>
         <argument android:name="taskId" app:argType="string" app:nullable="true"/>
     </fragment>
 </navigation>
