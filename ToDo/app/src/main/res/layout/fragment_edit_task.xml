@@ -42,11 +42,15 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/task_text_placeholder"
+                    app:boxStrokeColor="@color/outlined_text_container"
                     app:layout_constraintTop_toTopOf="parent"
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:boxBackgroundColor="?attr/on_back_secondary">
+                    app:hintTextColor = "?attr/menu_item_background"
+                    app:boxBackgroundColor="?attr/on_back_secondary"
+                    app:boxStrokeWidthFocused = "1dp"
+            >
 
                 <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/task_edit_text"
@@ -80,12 +84,11 @@
                     android:id="@+id/deadline_switch"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:paddingTop="32dp"
+
                     android:text="@string/deadline_text"
                     app:layout_constraintTop_toBottomOf="@+id/priority_spinner"
                     tools:layout_editor_absoluteX="16dp"
                     android:checked="false"/>
-
             <TextView
                     android:id="@+id/deadline_text"
                     android:layout_width="wrap_content"

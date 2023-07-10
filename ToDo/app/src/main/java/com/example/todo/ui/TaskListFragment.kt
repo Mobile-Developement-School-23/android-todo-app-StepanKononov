@@ -5,6 +5,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AlphaAnimation
+import android.widget.ImageButton
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.coroutineScope
@@ -29,6 +32,7 @@ import javax.inject.Inject
 
 @FragmentScope
 class TaskListFragment : Fragment() {
+
     @Inject
     lateinit var viewModelFactory: TaskListViewModelFactory
     private lateinit var fragmentComponent: FragmentComponent
@@ -36,9 +40,11 @@ class TaskListFragment : Fragment() {
         viewModelFactory
     }
 
+
     private var _binding: FragmentTaskListBinding? = null
     private val binding get() = _binding!!
     private var items: List<TodoItem>? = null
+    private val themeData = ThemeData()
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -48,7 +54,7 @@ class TaskListFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         _binding = FragmentTaskListBinding.inflate(inflater, container, false)
         return binding.root
@@ -125,6 +131,7 @@ class TaskListFragment : Fragment() {
         taskAdapter.submitList(filteredItems)
     }
 
+
     private fun bind() {
         binding.apply {
             addTaskButton.setOnClickListener {
@@ -133,8 +140,68 @@ class TaskListFragment : Fragment() {
             hideDoneTaskButton.setOnCheckedChangeListener { _, isChecked ->
                 onHideTask(isChecked)
             }
+            themePickerButton.tag = viewModel.themeTag
+            initialTheme(themePickerButton)
+            themePickerButton.setOnClickListener {
+                onThemeButtonListener(themePickerButton)
+            }
+        }
+
+
+    }
+
+    private fun changeTheme(icon: Int, tag: String) {
+        binding.apply {
+            themePickerButton.setImageResource(icon)
+            binding.themePickerButton.tag = tag
+        }
+        when (tag) {
+            ThemeEnum.DAY.toString() -> viewModel.setDayTheme()
+            ThemeEnum.NIGHT.toString() -> viewModel.setNightTheme()
+            else -> viewModel.setSystemTheme()
         }
     }
+
+    private fun onThemeButtonListener(themePickerButton: ImageButton) {
+        when (themePickerButton.tag as? String) {
+            null, ThemeEnum.DAY.toString() -> {
+                changeTheme(themeData.night.icon, themeData.night.tag.toString())
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                animateThemeChange(this)
+            }
+
+            ThemeEnum.NIGHT.toString() -> {
+                changeTheme(themeData.system.icon, themeData.system.tag.toString())
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+                animateThemeChange(this)
+            }
+
+            else -> {
+                changeTheme(themeData.day.icon, themeData.day.tag.toString())
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                animateThemeChange(this)
+            }
+        }
+    }
+
+    private fun initialTheme(themePickerButton: ImageButton) =
+        when (viewModel.themeTag) {
+            ThemeEnum.DAY.toString() -> {
+                themePickerButton.setImageResource(themeData.day.icon)
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            }
+
+            ThemeEnum.NIGHT.toString() -> {
+                themePickerButton.setImageResource(themeData.night.icon)
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+            }
+
+            else -> {
+                themePickerButton.setImageResource(themeData.system.icon)
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            }
+        }
+
 
     private fun startInternetConnectionWatcher() {
         val internetConnectionWatcher = InternetConnectionWatcher(requireContext())
@@ -188,4 +255,29 @@ class TaskListFragment : Fragment() {
         super.onDestroyView()
         _binding = null
     }
+    private  val FADE_ANIMATION_DURATION = 300L
+
+    private fun animateThemeChange(fragment: Fragment) {
+        val rootView = fragment.requireView() as ViewGroup
+        val fadeAnimation = AlphaAnimation(0f, 1f).apply {
+            duration = FADE_ANIMATION_DURATION
+        }
+        rootView.startAnimation(fadeAnimation)
+    }
 }
+
+data class ThemeData(
+    val night: ThemeDescription = ThemeDescription(R.drawable.moon_stars, ThemeEnum.NIGHT),
+    val day: ThemeDescription = ThemeDescription(R.drawable.sun, ThemeEnum.DAY),
+    val system: ThemeDescription = ThemeDescription(R.drawable.eclipse_alt, ThemeEnum.SYSTEM),
+)
+
+data class ThemeDescription(
+    val icon: Int,
+    val tag: ThemeEnum,
+)
+
+enum class ThemeEnum {
+    NIGHT, DAY, SYSTEM
+}
+

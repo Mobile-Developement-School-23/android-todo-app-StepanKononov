@@ -1,5 +1,5 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- Base application themeTag. -->
     <style name="Theme.ToDo" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Primary brand color. -->
 
@@ -12,13 +12,13 @@
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor">@color/light_gray</item>
-        <!-- Customize your theme here. -->
+        <!-- Customize your themeTag here. -->
         <item name="back_secondary">@color/light_gray</item>
         <item name="on_secondary_separator">@color/grey_separator</item>
         <item name="on_back_secondary">@color/white</item>
         <item name="button_active_background">@color/red</item>
         <item name="button_background">@color/light_gray_200</item>
-        <item name="close_button_background">@color/black</item>
+        <item name="menu_item_background">@color/dark_gray_elevated</item>
 
         <item name="checkboxStyle">@style/Widget.App.CheckBox</item>
         <item name="buttonStyle">@style/Button.DeleteTaskButton</item>

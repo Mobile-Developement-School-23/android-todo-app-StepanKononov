@@ -7,6 +7,7 @@ import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import com.example.todo.data.TodoItemsRepository
 import com.example.todo.data.model.TodoItem
+import com.example.todo.ui.ThemeData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -17,19 +18,23 @@ class TaskListViewModel @Inject constructor(
     application: Application,
     private val itemsRepository: TodoItemsRepository,
     private val workManager: WorkManager,
-    private val workRequest: PeriodicWorkRequest
+    private val workRequest: PeriodicWorkRequest,
+
 ) : AndroidViewModel(application) {
 
     init {
         refreshDataFromRepository()
     }
-
-
+    private val themeData = ThemeData()
     private var todoItems: LiveData<List<TodoItem>> = itemsRepository.todoItemsList
     private var _eventNetworkError = MutableLiveData(false)
     private var _isNetworkErrorShown = MutableLiveData(false)
     private var _isDoneTaskHide = false
 
+    private var _themeTag = themeData.day.tag.toString()
+
+    val themeTag
+        get() = _themeTag
     val isDoneTaskHide
         get() = _isDoneTaskHide
 
@@ -72,6 +77,16 @@ class TaskListViewModel @Inject constructor(
             workManager.enqueue(workRequest)
         }
 
+    }
+
+    fun setDayTheme(){
+        _themeTag = themeData.day.tag.toString()
+    }
+    fun setNightTheme(){
+        _themeTag = themeData.night.tag.toString()
+    }
+    fun setSystemTheme(){
+        _themeTag = themeData.system.tag.toString()
     }
 
     private fun updateItem(item: TodoItem) {

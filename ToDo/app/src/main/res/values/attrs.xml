@@ -6,5 +6,5 @@
     <attr name="color_green" format="color|reference"/>
     <attr name="button_active_background" format="color|reference"/>
     <attr name="button_background" format="color|reference"/>
-    <attr name="close_button_background" format="color|reference"/>
+    <attr name="menu_item_background" format="color|reference"/>
 </resources>
