@@ -1,5 +1,7 @@
 package com.example.todo
 
+import android.content.Context
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
@@ -20,6 +22,7 @@ class MainActivity : AppCompatActivity() {
         navController = navHostFragment.navController
 
     }
+
 
     override fun onNavigateUp(): Boolean {
         return navController.navigateUp() || super.onNavigateUp()

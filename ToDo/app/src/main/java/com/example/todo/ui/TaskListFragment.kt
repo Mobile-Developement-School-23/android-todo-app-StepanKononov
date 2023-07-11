@@ -2,10 +2,10 @@ package com.example.todo.ui
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.AlphaAnimation
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.Fragment
@@ -167,19 +167,16 @@ class TaskListFragment : Fragment() {
             null, ThemeEnum.DAY.toString() -> {
                 changeTheme(themeData.night.icon, themeData.night.tag.toString())
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                animateThemeChange(this)
             }
 
             ThemeEnum.NIGHT.toString() -> {
                 changeTheme(themeData.system.icon, themeData.system.tag.toString())
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-                animateThemeChange(this)
             }
 
             else -> {
                 changeTheme(themeData.day.icon, themeData.day.tag.toString())
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                animateThemeChange(this)
             }
         }
     }
@@ -198,7 +195,7 @@ class TaskListFragment : Fragment() {
 
             else -> {
                 themePickerButton.setImageResource(themeData.system.icon)
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
             }
         }
 
@@ -255,29 +252,7 @@ class TaskListFragment : Fragment() {
         super.onDestroyView()
         _binding = null
     }
-    private  val FADE_ANIMATION_DURATION = 300L
 
-    private fun animateThemeChange(fragment: Fragment) {
-        val rootView = fragment.requireView() as ViewGroup
-        val fadeAnimation = AlphaAnimation(0f, 1f).apply {
-            duration = FADE_ANIMATION_DURATION
-        }
-        rootView.startAnimation(fadeAnimation)
-    }
-}
 
-data class ThemeData(
-    val night: ThemeDescription = ThemeDescription(R.drawable.moon_stars, ThemeEnum.NIGHT),
-    val day: ThemeDescription = ThemeDescription(R.drawable.sun, ThemeEnum.DAY),
-    val system: ThemeDescription = ThemeDescription(R.drawable.eclipse_alt, ThemeEnum.SYSTEM),
-)
-
-data class ThemeDescription(
-    val icon: Int,
-    val tag: ThemeEnum,
-)
-
-enum class ThemeEnum {
-    NIGHT, DAY, SYSTEM
 }
 

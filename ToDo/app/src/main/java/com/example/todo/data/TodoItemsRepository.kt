@@ -1,5 +1,6 @@
 package com.example.todo.data
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.asLiveData
 import com.example.todo.Constants
@@ -14,13 +15,14 @@ import com.example.todo.network.models.TodoItemRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import java.lang.Error
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class TodoItemsRepository @Inject constructor(
     private val database: AppDatabase,
-    private val todoApi: TodoApi
+    private val todoApi: TodoApi,
 ) {
     private val status = "ok"
     val todoItemsList: LiveData<List<TodoItem>> =
@@ -54,7 +56,9 @@ class TodoItemsRepository @Inject constructor(
             val request = TodoItemRequest(status, item.asDomainModel())
             val response = todoApi.retrofitService.getServerResponse()
             todoApi.retrofitService.addItem(response.revision, request)
+
             synchronizeRevisions()
+
         }
 
     suspend fun deleteItemFromService(item: TodoItem) =
@@ -80,8 +84,13 @@ class TodoItemsRepository @Inject constructor(
 
     private suspend fun synchronizeRevisions() {
         withContext(Dispatchers.IO) {
-            val response = todoApi.retrofitService.getServerResponse()
-            database.todoAppDao().updateRevision(DatabaseRevision(Constants.REVISION_ID, response.revision))
+            try {
+                val response = todoApi.retrofitService.getServerResponse()
+                database.todoAppDao().updateRevision(DatabaseRevision(Constants.REVISION_ID, response.revision))
+            }
+            catch (e: Exception){
+                Log.v("synchronizeRevisions", e.message.toString())
+            }
         }
     }
 
@@ -112,7 +121,7 @@ class TodoItemsRepository @Inject constructor(
 
     private suspend fun mergeData(
         itemsFromDatabase: List<TodoItem>,
-        itemsFromServer: List<TodoItem>
+        itemsFromServer: List<TodoItem>,
     ) {
         for (item in itemsFromDatabase) {
             if (itemsFromServer.find { it.id == item.id } == null) {

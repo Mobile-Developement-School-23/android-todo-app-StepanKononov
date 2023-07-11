@@ -1,10 +1,13 @@
 package com.example.todo.ui
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.OnBackPressedCallback
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -15,11 +18,14 @@ import com.example.todo.TodoApplication
 import com.example.todo.data.model.TodoItem
 import com.example.todo.data.model.toPriorityString
 import com.example.todo.data.viewModels.EditTaskViewModel
+import com.example.todo.data.viewModels.SnackbarState
 import com.example.todo.data.viewModels.factory.EditTaskViewModelFactory
 import com.example.todo.databinding.FragmentEditTaskBinding
 import com.example.todo.di.components.FragmentComponent
 import com.example.todo.di.scope.FragmentScope
 import com.google.android.material.datepicker.MaterialDatePicker
+import com.google.android.material.snackbar.BaseTransientBottomBar
+import com.google.android.material.snackbar.Snackbar
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
@@ -39,6 +45,9 @@ class EditTaskFragment : Fragment() {
     private lateinit var _taskID: String
     private lateinit var _item: TodoItem
 
+    private lateinit var snackbar: Snackbar
+    private lateinit var countDownTimer: CountDownTimer
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let { bundle ->
@@ -54,7 +63,7 @@ class EditTaskFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         _binding = FragmentEditTaskBinding.inflate(inflater, container, false)
         return binding.root
@@ -74,6 +83,13 @@ class EditTaskFragment : Fragment() {
             bindViewsToViewModel()
             bindTopAppBar()
         }
+
+        viewModel.snackbarState?.let { snackbarState ->
+            if (snackbarState.remainingTime > 0) { // Проверяем оставшееся время
+                showSnackbar(snackbarState)
+            }
+        }
+
     }
 
     private fun bindViewsToViewModel() {
@@ -82,8 +98,8 @@ class EditTaskFragment : Fragment() {
             prioritySpinner.onSpinnerSelected(viewModel::setPriority)
 
             deleteTaskButton.setOnClickListener {
-                viewModel.removeItem(_item)
-                navigateToTaskListFragment()
+                showDeleteSnackbar(_item.text)
+                deleteTaskButton.isEnabled = false
             }
             deadlineSwitch.setOnCheckedChangeListener { _, isChecked ->
                 if (isChecked) {
@@ -94,9 +110,14 @@ class EditTaskFragment : Fragment() {
             }
         }
     }
-
     override fun onDestroyView() {
         super.onDestroyView()
+        if (this::snackbar.isInitialized)
+            if (snackbar.isShown)
+                snackbar.dismiss()
+        if (this::countDownTimer.isInitialized)
+            countDownTimer.cancel()
+        viewModel.clearSnackbarState()
         _binding = null
     }
 
@@ -112,7 +133,7 @@ class EditTaskFragment : Fragment() {
 
     private fun bindTaskItem(item: TodoItem) {
         binding.taskEditText.setText(item.text)
-        binding.deleteTaskButton.isEnabled = !viewModel.isNewItem
+        binding.deleteTaskButton.isEnabled = viewModel.showDeleteButton()
         bindPrioritySpinner()
         bindDeadlineView(item.deadline)
     }
@@ -183,4 +204,78 @@ class EditTaskFragment : Fragment() {
         fragmentComponent = application.appComponent.fragmentComponent().create()
         fragmentComponent.inject(this)
     }
+
+    private fun showDeleteSnackbar(taskName: String) {
+        //Todo вынести этот мусор
+        val deleteText = taskName.trimStart().take(7) + "..."
+        val cancelText = "Отменить"
+        val duration = 5000L
+
+        val snackbarState = SnackbarState(deleteText, cancelText, duration, duration) // Сохраняем оставшееся время
+        viewModel.setSnackbarState(snackbarState)
+
+        showSnackbar(snackbarState)
+    }
+
+
+    private fun showSnackbar(snackbarState: SnackbarState) {
+        val deleteText = snackbarState.deleteText
+        val cancelText = snackbarState.cancelText
+        val duration = snackbarState.duration
+        val remainingTime = snackbarState.remainingTime
+
+        snackbar = createSnackbar(deleteText, cancelText)
+        setupAnimation(duration, remainingTime)
+        startCountdownTimer(deleteText, remainingTime)
+        snackbar.show()
+    }
+
+
+    private fun createSnackbar(deleteText: String, cancelText: String): Snackbar {
+        return Snackbar.make(requireView(), deleteText, Snackbar.LENGTH_INDEFINITE)
+            .setAction(cancelText) { cancelDeletion() }
+            .setAnimationMode(BaseTransientBottomBar.ANIMATION_MODE_SLIDE)
+    }
+
+    private fun setupAnimation(duration: Long, remainingTime: Long) {
+        val snackbarView = snackbar.view
+        val startAlpha = remainingTime / duration.toFloat()
+        val alphaAnimation = ValueAnimator.ofFloat(startAlpha, 0.0f)
+        alphaAnimation.addUpdateListener { animator ->
+            val alpha = animator.animatedValue as Float
+            snackbarView.alpha = alpha
+        }
+        alphaAnimation.duration = duration
+        alphaAnimation.start()
+    }
+
+    private fun startCountdownTimer(deleteText:String, duration: Long) {
+        countDownTimer = object : CountDownTimer(duration, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                snackbar.setText("Отменить удаление $deleteText ${millisUntilFinished / 1000}")
+                viewModel.setRemainingTimeState(millisUntilFinished)
+            }
+
+            override fun onFinish() {
+                performDeletion()
+            }
+        }.start()
+    }
+
+
+    private fun cancelDeletion() {
+        binding.deleteTaskButton.isEnabled = true
+        viewModel.clearSnackbarState()
+        countDownTimer.cancel()
+        snackbar.dismiss()
+    }
+
+    private fun performDeletion() {
+        snackbar.dismiss()
+        viewModel.clearSnackbarState()
+        viewModel.removeItem(_item)
+        navigateToTaskListFragment()
+    }
+
+
 }

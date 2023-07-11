@@ -12,15 +12,24 @@ import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
 
+data class SnackbarState(
+    val deleteText: String,
+    val cancelText: String,
+    val duration: Long,
+    var remainingTime: Long,
+)
+
 class EditTaskViewModel @Inject constructor(
-    private val itemsRepository: TodoItemsRepository
+    private val itemsRepository: TodoItemsRepository,
 ) : ViewModel() {
-
+    private var _snackbarState: SnackbarState? = null
     private val _currentItem = MutableLiveData<TodoItem>()
-    val currentItem get() = _currentItem
-
     private var _isNewItem = true
+    val snackbarState get() = _snackbarState
+    val currentItem get() = _currentItem
     val isNewItem get() = _isNewItem
+
+    fun showDeleteButton() = !isNewItem && snackbarState == null
 
     fun itemNotNew() {
         _isNewItem = false
@@ -57,6 +66,19 @@ class EditTaskViewModel @Inject constructor(
 
     fun setPriority(priorityIndex: Int) {
         _currentItem.value?.priority = getTaskPriority(priorityIndex)
+    }
+
+
+    fun setSnackbarState(state: SnackbarState) {
+        _snackbarState = state
+    }
+
+    fun setRemainingTimeState(time: Long) {
+        _snackbarState?.remainingTime = time
+    }
+
+    fun clearSnackbarState() {
+        _snackbarState = null
     }
 
     private fun deleteItem(item: TodoItem) {

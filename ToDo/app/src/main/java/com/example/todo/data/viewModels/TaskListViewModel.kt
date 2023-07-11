@@ -19,7 +19,6 @@ class TaskListViewModel @Inject constructor(
     private val itemsRepository: TodoItemsRepository,
     private val workManager: WorkManager,
     private val workRequest: PeriodicWorkRequest,
-
 ) : AndroidViewModel(application) {
 
     init {
@@ -31,7 +30,7 @@ class TaskListViewModel @Inject constructor(
     private var _isNetworkErrorShown = MutableLiveData(false)
     private var _isDoneTaskHide = false
 
-    private var _themeTag = themeData.day.tag.toString()
+    private var _themeTag = themeData.system.tag.toString()
 
     val themeTag
         get() = _themeTag
