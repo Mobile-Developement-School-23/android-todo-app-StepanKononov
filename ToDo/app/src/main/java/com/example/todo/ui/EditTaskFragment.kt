@@ -7,7 +7,6 @@ import android.os.CountDownTimer
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.activity.OnBackPressedCallback
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -110,6 +109,7 @@ class EditTaskFragment : Fragment() {
             }
         }
     }
+
     override fun onDestroyView() {
         super.onDestroyView()
         if (this::snackbar.isInitialized)
@@ -209,7 +209,7 @@ class EditTaskFragment : Fragment() {
         //Todo вынести этот мусор
         val deleteText = taskName.trimStart().take(7) + "..."
         val cancelText = "Отменить"
-        val duration = 5000L
+        val duration = 10000L
 
         val snackbarState = SnackbarState(deleteText, cancelText, duration, duration) // Сохраняем оставшееся время
         viewModel.setSnackbarState(snackbarState)
@@ -249,7 +249,7 @@ class EditTaskFragment : Fragment() {
         alphaAnimation.start()
     }
 
-    private fun startCountdownTimer(deleteText:String, duration: Long) {
+    private fun startCountdownTimer(deleteText: String, duration: Long) {
         countDownTimer = object : CountDownTimer(duration, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 snackbar.setText("Отменить удаление $deleteText ${millisUntilFinished / 1000}")

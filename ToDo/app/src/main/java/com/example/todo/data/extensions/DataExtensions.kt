@@ -26,9 +26,9 @@ fun List<TodoItemResponse>.asDatabaseModel(): List<TodoItemEntity> {
 
 fun TodoItem.asDomainModel(): TodoItemResponse {
     val importance = when (priority) {
-        com.example.todo.data.model.TaskPriority.LOW -> TodoItemResponse.Importance.low
-        com.example.todo.data.model.TaskPriority.MEDIUM -> TodoItemResponse.Importance.basic
-        com.example.todo.data.model.TaskPriority.HIGH -> TodoItemResponse.Importance.important
+        TaskPriority.LOW -> TodoItemResponse.Importance.low
+        TaskPriority.MEDIUM -> TodoItemResponse.Importance.basic
+        TaskPriority.HIGH -> TodoItemResponse.Importance.important
     }
 
     return TodoItemResponse(

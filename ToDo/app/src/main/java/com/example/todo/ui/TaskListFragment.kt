@@ -1,12 +1,18 @@
 package com.example.todo.ui
 
+import android.Manifest
 import android.content.Context
+import android.content.DialogInterface
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -31,7 +37,7 @@ import java.util.*
 import javax.inject.Inject
 
 @FragmentScope
-class TaskListFragment : Fragment() {
+class TaskListFragment : Fragment(), PermissionListener {
 
     @Inject
     lateinit var viewModelFactory: TaskListViewModelFactory
@@ -40,7 +46,7 @@ class TaskListFragment : Fragment() {
         viewModelFactory
     }
 
-
+    lateinit var permissionHelper: PermissionHelper
     private var _binding: FragmentTaskListBinding? = null
     private val binding get() = _binding!!
     private var items: List<TodoItem>? = null
@@ -61,10 +67,15 @@ class TaskListFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        permissionHelper = PermissionHelper(this, this)
+        permissionHelper.checkForPermissions(Manifest.permission.POST_NOTIFICATIONS)
         setupRecyclerView()
         observeViewModelData()
         bind()
         startInternetConnectionWatcher()
+
+
     }
 
     private fun injectDependencies() {
@@ -251,6 +262,35 @@ class TaskListFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun shouldShowRationaleInfo() {
+        val dialogBuilder = AlertDialog.Builder(requireContext())
+
+        // set message of alert dialog
+        dialogBuilder.setMessage("Camera permission is Required")
+            // if the dialog is cancelable
+            .setCancelable(false)
+            // positive button text and action
+            .setPositiveButton("OK", DialogInterface.OnClickListener { dialog, id ->
+                dialog.cancel()
+                permissionHelper.launchPermissionDialog(Manifest.permission.POST_NOTIFICATIONS)
+            })
+            // negative button text and action
+            .setNegativeButton("Cancel", DialogInterface.OnClickListener { dialog, id ->
+                dialog.cancel()
+            })
+
+        // create dialog box
+        val alert = dialogBuilder.create()
+        // set title for alert dialog box
+        alert.setTitle("AlertDialogExample")
+        // show alert dialog
+        alert.show()
+    }
+
+    override fun isPermissionGranted(isGranted: Boolean) {
+
     }
 
 

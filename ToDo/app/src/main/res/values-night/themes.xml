@@ -2,6 +2,7 @@
     <!-- Base application themeTag. -->
     <style name="Theme.ToDo" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Primary brand color. -->
+        <item name="background">@color/dark_gray</item>
         <item name="colorPrimary">@color/dark_gray</item>
         <item name="colorPrimaryVariant">@color/purple_700</item>
         <item name="colorOnPrimary">@color/black</item>
