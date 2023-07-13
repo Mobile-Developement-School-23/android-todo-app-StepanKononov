@@ -28,6 +28,7 @@ class TaskListViewModel @Inject constructor(
     private var todoItems: LiveData<List<TodoItem>> = itemsRepository.todoItemsList
     private var _eventNetworkError = MutableLiveData(false)
     private var _isNetworkErrorShown = MutableLiveData(false)
+
     private var _isDoneTaskHide = false
 
     private var _themeTag = themeData.system.tag.toString()

@@ -7,6 +7,8 @@ import com.example.todo.di.module.DatabaseModule
 import com.example.todo.di.module.PeriodicWorkRequestModule
 import com.example.todo.di.module.WorkManagerModule
 import com.example.todo.network.TodoApi
+import com.example.todo.ui.NotificationUtils
+import com.example.todo.ui.TaskListFragment
 import com.example.todo.ui.ThemeData
 import com.example.todo.ui.ThemeDescription
 import dagger.BindsInstance
@@ -31,7 +33,7 @@ interface AppComponent {
 
     fun dataBase(): AppDatabase
     fun todoApi(): TodoApi
-
+    fun inject(notificationUtils: NotificationUtils)
     fun fragmentComponent(): FragmentComponent.Factory
     fun workerComponent(): WorkerComponent.Factory
 }

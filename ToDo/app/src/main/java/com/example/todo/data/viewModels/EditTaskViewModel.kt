@@ -25,10 +25,12 @@ class EditTaskViewModel @Inject constructor(
     private var _snackbarState: SnackbarState? = null
     private val _currentItem = MutableLiveData<TodoItem>()
     private var _isNewItem = true
+
     val snackbarState get() = _snackbarState
     val currentItem get() = _currentItem
     val isNewItem get() = _isNewItem
 
+    fun getDeadline() = _currentItem.value?.deadline
     fun showDeleteButton() = !isNewItem && snackbarState == null
 
     fun itemNotNew() {

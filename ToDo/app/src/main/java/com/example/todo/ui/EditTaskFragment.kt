@@ -31,6 +31,8 @@ import javax.inject.Inject
 
 @FragmentScope
 class EditTaskFragment : Fragment() {
+
+
     @Inject
     lateinit var viewModelFactory: EditTaskViewModelFactory
     private val viewModel: EditTaskViewModel by viewModels {
@@ -84,7 +86,7 @@ class EditTaskFragment : Fragment() {
         }
 
         viewModel.snackbarState?.let { snackbarState ->
-            if (snackbarState.remainingTime > 0) { // Проверяем оставшееся время
+            if (snackbarState.remainingTime > 0) {
                 showSnackbar(snackbarState)
             }
         }
@@ -163,10 +165,10 @@ class EditTaskFragment : Fragment() {
 
     private fun saveTask() {
         val stringInTextField = binding.taskEditText.text.toString()
-        if (stringInTextField.isNotBlank()) {
+        if (stringInTextField.isNotBlank())
             viewModel.saveOrUpdateTask(_item)
-        }
     }
+
 
     private fun showDatePickerDialog() {
         val builder = MaterialDatePicker.Builder.datePicker()
@@ -276,6 +278,4 @@ class EditTaskFragment : Fragment() {
         viewModel.removeItem(_item)
         navigateToTaskListFragment()
     }
-
-
 }

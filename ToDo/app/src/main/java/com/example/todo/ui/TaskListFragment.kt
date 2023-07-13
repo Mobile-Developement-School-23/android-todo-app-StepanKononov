@@ -2,7 +2,6 @@ package com.example.todo.ui
 
 import android.Manifest
 import android.content.Context
-import android.content.DialogInterface
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -10,9 +9,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -31,13 +27,18 @@ import com.example.todo.databinding.FragmentTaskListBinding
 import com.example.todo.di.components.FragmentComponent
 import com.example.todo.di.scope.FragmentScope
 import com.example.todo.network.InternetConnectionWatcher
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
 
+
 @FragmentScope
 class TaskListFragment : Fragment(), PermissionListener {
+
+    @Inject
+    lateinit var notificationUtils: NotificationUtils
 
     @Inject
     lateinit var viewModelFactory: TaskListViewModelFactory
@@ -46,7 +47,7 @@ class TaskListFragment : Fragment(), PermissionListener {
         viewModelFactory
     }
 
-    lateinit var permissionHelper: PermissionHelper
+    private var permissionHelper = PermissionHelper(this, this)
     private var _binding: FragmentTaskListBinding? = null
     private val binding get() = _binding!!
     private var items: List<TodoItem>? = null
@@ -68,14 +69,13 @@ class TaskListFragment : Fragment(), PermissionListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        permissionHelper = PermissionHelper(this, this)
-        permissionHelper.checkForPermissions(Manifest.permission.POST_NOTIFICATIONS)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissionHelper.checkForPermissions(Manifest.permission.POST_NOTIFICATIONS)
+        }
         setupRecyclerView()
         observeViewModelData()
         bind()
         startInternetConnectionWatcher()
-
-
     }
 
     private fun injectDependencies() {
@@ -129,9 +129,15 @@ class TaskListFragment : Fragment(), PermissionListener {
             viewModel.getAllItems().collect {
                 items = it
                 setTaskList(viewModel.isDoneTaskHide, taskAdapter)
+                setItemsNotification(it)
             }
         }
     }
+
+    private fun setItemsNotification(items: List<TodoItem>) =
+        items.forEach { item ->
+            updateNotification(item.isComplete, item)
+        }
 
     private fun setTaskList(hideDoneTask: Boolean, taskAdapter: ItemTaskListAdapter) {
         val filteredItems = if (hideDoneTask) {
@@ -157,9 +163,8 @@ class TaskListFragment : Fragment(), PermissionListener {
                 onThemeButtonListener(themePickerButton)
             }
         }
-
-
     }
+
 
     private fun changeTheme(icon: Int, tag: String) {
         binding.apply {
@@ -235,12 +240,14 @@ class TaskListFragment : Fragment(), PermissionListener {
     }
 
     private fun onChangeTaskDone(todoItem: TodoItem, complete: Boolean) {
+        updateNotification(complete, todoItem)
         lifecycle.coroutineScope.launch {
             viewModel.updateTodoItem(
                 todoItem.copy(isComplete = complete)
             )
         }
     }
+
 
     private fun onNetworkError() {
         if (!viewModel.isNetworkErrorShown.value!!) {
@@ -265,34 +272,58 @@ class TaskListFragment : Fragment(), PermissionListener {
     }
 
     override fun shouldShowRationaleInfo() {
-        val dialogBuilder = AlertDialog.Builder(requireContext())
+        val dialogBuilder = MaterialAlertDialogBuilder(requireContext())
 
         // set message of alert dialog
-        dialogBuilder.setMessage("Camera permission is Required")
+        dialogBuilder.setMessage("Notification permission is required")
             // if the dialog is cancelable
             .setCancelable(false)
             // positive button text and action
-            .setPositiveButton("OK", DialogInterface.OnClickListener { dialog, id ->
+            .setPositiveButton("OK") { dialog, _ ->
                 dialog.cancel()
-                permissionHelper.launchPermissionDialog(Manifest.permission.POST_NOTIFICATIONS)
-            })
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    permissionHelper.launchPermissionDialog(Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
             // negative button text and action
-            .setNegativeButton("Cancel", DialogInterface.OnClickListener { dialog, id ->
+            .setNegativeButton("Cancel") { dialog, _ ->
                 dialog.cancel()
-            })
+            }
 
-        // create dialog box
-        val alert = dialogBuilder.create()
         // set title for alert dialog box
-        alert.setTitle("AlertDialogExample")
-        // show alert dialog
+        dialogBuilder.setTitle("Notification require")
+
+        // create and show the dialog box
+        val alert = dialogBuilder.create()
         alert.show()
     }
+
 
     override fun isPermissionGranted(isGranted: Boolean) {
 
     }
 
+    private fun updateNotification(complete: Boolean, todoItem: TodoItem) {
+        if (complete) {
+            Log.e("cancelNotification", todoItem.text)
+            notificationUtils.cancelNotification( todoItem.id)
+        } else {
+            Log.e("createNotification", todoItem.text + todoItem.deadline?.toString())
+            notificationUtils.cancelNotification(todoItem.id)
+            createNotification(todoItem)
+        }
+    }
+
+    private fun createNotification(item: TodoItem) {
+        if (item.deadline != null) {
+            notificationUtils.createNotification(
+                context = requireContext(),
+                taskText = item.text,
+                deadlineMillis = item.deadline!!,
+                id = item.id
+            )
+        }
+    }
 
 }
 

@@ -50,4 +50,8 @@
     <style name="Text32.Bold" parent="Text32">
         <item name="android:textStyle">bold</item>
     </style>
+
+
+
+
 </resources>

@@ -13,6 +13,7 @@ interface FragmentComponent {
         fun create(): FragmentComponent
     }
 
+
     fun inject(fragment: TaskListFragment)
     fun inject(fragment: EditTaskFragment)
 
