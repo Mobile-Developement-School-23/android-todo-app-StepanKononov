@@ -25,7 +25,7 @@
                 android:background="?attr/background"
                 android:paddingStart="60dp"
                 app:title="@string/task_list_title"
-                app:titleTextAppearance="@style/Text32.Bold"
+                app:titleTextAppearance="@style/TextAppearance.MdcTypographyStyles.Headline4"
                 tools:ignore="RtlSymmetry"/>
         <LinearLayout
                 android:layout_width="match_parent"
@@ -38,8 +38,8 @@
                     android:id="@+id/amount_done_tasks_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    style="@style/TextAppearance.MdcTypographyStyles.Caption"
                     android:text="@string/amount_of_done_task"/>
-
             <Space
                     android:layout_width="0dp"
                     android:layout_height="0dp"

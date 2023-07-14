@@ -10,6 +10,13 @@
     <string name="network_error_message">Ошибка соединения. Загруженны данные из локального хранилища</string>
     <string name="task_list_title">Мои дела</string>
     <string name="notification_title">Task Deadline</string>
+    <string name="cancel_deletion">"Отменить удаление "</string>
+    <string name="cancel_button_text">Отменить</string>
+    <string name="permissin_messege">Требуется разрешение на уведомление для оповещения о приближающемся дедлайне
+    </string>
+    <string name="permission_title">Требуется разрешение</string>
+    <string name="cancel">Отметить</string>
+    <string name="ok">OK</string>
 
     <string-array name="task_priority_type">
         <item>Нет</item>

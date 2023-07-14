@@ -1,4 +1,4 @@
-package com.example.todo.ui
+package com.example.todo.ui.permissions
 
 
 import android.app.Activity
@@ -39,6 +39,7 @@ class PermissionHelper(context: Fragment, permissionListener: PermissionListener
                 permissionListener.shouldShowRationaleInfo()
 
             }
+
             else -> {
                 launchPermissionDialog(manifestPermission)
             }
@@ -47,7 +48,6 @@ class PermissionHelper(context: Fragment, permissionListener: PermissionListener
 
 
     fun launchPermissionDialog(manifestPermission: String) {
-        Log.e("Permission: ", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
         requestPermissionLauncher.launch(manifestPermission)
     }
 

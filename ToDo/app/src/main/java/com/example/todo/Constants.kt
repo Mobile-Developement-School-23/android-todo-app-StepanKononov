@@ -7,4 +7,5 @@ object Constants {
     const val REVISION_ID = 1
     const val CHANNEL_NAME = "Todo App Notifications"
     const val CHANNEL_DESCRIPTION = "Channel for Todo App notifications"
+    const val CANCEL_DURATION  = 10000L
 }

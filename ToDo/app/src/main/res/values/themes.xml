@@ -22,6 +22,7 @@
         <item name="button_background">@color/light_gray_200</item>
         <item name="menu_item_background">@color/dark_gray_elevated</item>
 
+
         <item name="checkboxStyle">@style/Widget.App.CheckBox</item>
         <item name="buttonStyle">@style/Button.DeleteTaskButton</item>
         <item name="materialCalendarTheme">@style/ThemeOverlay.App.DatePicker</item>

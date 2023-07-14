@@ -42,7 +42,8 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/open_icon"
             app:layout_constraintBottom_toBottomOf="parent"
-            tools:text="Place holder task)"/>
+            style="@style/TextAppearance.MdcTypographyStyles.Body1"
+            tools:text="Placeholder task)"/>
 
     <ImageView
             android:id="@+id/open_icon"
@@ -60,6 +61,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintStart_toEndOf="@+id/priority_icon"
+            style="@style/TextAppearance.MdcTypographyStyles.Caption"
+            tools:text="Placeholder date"
             app:layout_constraintTop_toBottomOf="@+id/task_text"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

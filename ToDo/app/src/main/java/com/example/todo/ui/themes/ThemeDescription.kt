@@ -1,4 +1,4 @@
-package com.example.todo.ui
+package com.example.todo.ui.themes
 
 data class ThemeDescription(
     val icon: Int,

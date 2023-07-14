@@ -12,13 +12,6 @@ import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
 
-data class SnackbarState(
-    val deleteText: String,
-    val cancelText: String,
-    val duration: Long,
-    var remainingTime: Long,
-)
-
 class EditTaskViewModel @Inject constructor(
     private val itemsRepository: TodoItemsRepository,
 ) : ViewModel() {

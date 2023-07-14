@@ -1,4 +1,4 @@
-package com.example.todo.ui
+package com.example.todo.ui.permissions
 
 interface PermissionListener {
     fun shouldShowRationaleInfo()

@@ -2,14 +2,15 @@ package com.example.todo.ui
 
 import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.coroutineScope
@@ -27,6 +28,10 @@ import com.example.todo.databinding.FragmentTaskListBinding
 import com.example.todo.di.components.FragmentComponent
 import com.example.todo.di.scope.FragmentScope
 import com.example.todo.network.InternetConnectionWatcher
+import com.example.todo.ui.permissions.PermissionHelper
+import com.example.todo.ui.permissions.PermissionListener
+import com.example.todo.ui.themes.ThemeData
+import com.example.todo.ui.themes.ThemeEnum
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
@@ -274,26 +279,24 @@ class TaskListFragment : Fragment(), PermissionListener {
     override fun shouldShowRationaleInfo() {
         val dialogBuilder = MaterialAlertDialogBuilder(requireContext())
 
-        // set message of alert dialog
-        dialogBuilder.setMessage("Notification permission is required")
-            // if the dialog is cancelable
+
+        dialogBuilder.setMessage(getString(R.string.permissin_messege))
+
             .setCancelable(false)
-            // positive button text and action
-            .setPositiveButton("OK") { dialog, _ ->
+
+            .setPositiveButton(getString(R.string.ok)) { dialog, _ ->
                 dialog.cancel()
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     permissionHelper.launchPermissionDialog(Manifest.permission.POST_NOTIFICATIONS)
                 }
             }
-            // negative button text and action
-            .setNegativeButton("Cancel") { dialog, _ ->
+
+            .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
                 dialog.cancel()
             }
 
-        // set title for alert dialog box
-        dialogBuilder.setTitle("Notification require")
+        dialogBuilder.setTitle(getString(R.string.permission_title))
 
-        // create and show the dialog box
         val alert = dialogBuilder.create()
         alert.show()
     }
@@ -304,13 +307,17 @@ class TaskListFragment : Fragment(), PermissionListener {
     }
 
     private fun updateNotification(complete: Boolean, todoItem: TodoItem) {
-        if (complete) {
-            Log.e("cancelNotification", todoItem.text)
-            notificationUtils.cancelNotification( todoItem.id)
-        } else {
-            Log.e("createNotification", todoItem.text + todoItem.deadline?.toString())
-            notificationUtils.cancelNotification(todoItem.id)
-            createNotification(todoItem)
+
+        if (ActivityCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED && todoItem.deadline != null
+        ) {
+            if (complete) {
+                notificationUtils.cancelNotification(todoItem.id)
+            } else {
+                createNotification(todoItem)
+            }
         }
     }
 

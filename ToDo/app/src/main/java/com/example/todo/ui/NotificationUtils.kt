@@ -29,19 +29,19 @@ class NotificationUtils @Inject constructor(var workManager: WorkManager) {
         val deadlineTimeMillis = deadlineMillis.time
 
         if (deadlineTimeMillis > System.currentTimeMillis()) {
-            // Создание входных данных для Worker
+
             val inputData = Data.Builder()
                 .putString(NotificationWorker.KEY_TASK_TEXT, taskText)
                 .putString(NotificationWorker.KEY_NOTIFICATION_ID, id)
                 .build()
 
-            // Создание запроса на выполнение работы с уведомлением
+
             val notificationRequest = OneTimeWorkRequestBuilder<NotificationWorker>()
                 .setInitialDelay(deadlineTimeMillis - System.currentTimeMillis(), TimeUnit.MILLISECONDS)
                 .setInputData(inputData)
                 .build()
 
-            // Запуск работы по расписанию с уникальным идентификатором (id)
+
             workManager.enqueueUniqueWork(id, ExistingWorkPolicy.REPLACE, notificationRequest)
         }
     }
@@ -51,8 +51,6 @@ class NotificationUtils @Inject constructor(var workManager: WorkManager) {
     }
 
     private fun createNotificationChannel(notificationManager: NotificationManager, id: String) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
-            return
         val channel = NotificationChannel(
             id,
             Constants.CHANNEL_NAME,
@@ -72,7 +70,7 @@ class NotificationWorker(
 ) : Worker(context, workerParams) {
 
     override fun doWork(): Result {
-        // Получите данные из входных параметров
+
         val taskText = inputData.getString(KEY_TASK_TEXT)
         val notificationId = inputData.getString(KEY_NOTIFICATION_ID)
 
@@ -94,9 +92,6 @@ class NotificationWorker(
     }
 
     private fun createNotificationChannel(notificationManager: NotificationManager, id: String) {
-        // Проверка версии SDK для создания канала уведомлений
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
-            return
 
         val channel = NotificationChannel(
             id,

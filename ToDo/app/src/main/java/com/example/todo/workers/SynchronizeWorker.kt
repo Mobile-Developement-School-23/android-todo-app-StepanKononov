@@ -16,7 +16,7 @@ private const val TAG = "SynchronizeWorker"
 @ActivityScope
 class SynchronizeWorker(
     ctx: Context,
-    params: WorkerParameters
+    params: WorkerParameters,
 ) : CoroutineWorker(ctx, params) {
     @Inject
     lateinit var database: AppDatabase

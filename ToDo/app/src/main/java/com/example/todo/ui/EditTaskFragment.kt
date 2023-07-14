@@ -32,7 +32,6 @@ import javax.inject.Inject
 @FragmentScope
 class EditTaskFragment : Fragment() {
 
-
     @Inject
     lateinit var viewModelFactory: EditTaskViewModelFactory
     private val viewModel: EditTaskViewModel by viewModels {
@@ -115,11 +114,15 @@ class EditTaskFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         if (this::snackbar.isInitialized)
-            if (snackbar.isShown)
+            if (snackbar.isShown) {
                 snackbar.dismiss()
+            } else {
+                viewModel.clearSnackbarState()
+            }
+
         if (this::countDownTimer.isInitialized)
             countDownTimer.cancel()
-        viewModel.clearSnackbarState()
+
         _binding = null
     }
 
@@ -208,10 +211,9 @@ class EditTaskFragment : Fragment() {
     }
 
     private fun showDeleteSnackbar(taskName: String) {
-        //Todo вынести этот мусор
-        val deleteText = taskName.trimStart().take(7) + "..."
-        val cancelText = "Отменить"
-        val duration = 10000L
+        val deleteText = "\n" + taskName
+        val cancelText = getString(R.string.cancel_button_text)
+        val duration = Constants.CANCEL_DURATION
 
         val snackbarState = SnackbarState(deleteText, cancelText, duration, duration) // Сохраняем оставшееся время
         viewModel.setSnackbarState(snackbarState)
@@ -254,7 +256,12 @@ class EditTaskFragment : Fragment() {
     private fun startCountdownTimer(deleteText: String, duration: Long) {
         countDownTimer = object : CountDownTimer(duration, 1000) {
             override fun onTick(millisUntilFinished: Long) {
-                snackbar.setText("Отменить удаление $deleteText ${millisUntilFinished / 1000}")
+                snackbar.setText(buildString {
+                    append(getString(R.string.cancel_deletion))
+                    append(millisUntilFinished / 1000)
+                    append(" ")
+                    append(deleteText)
+                })
                 viewModel.setRemainingTimeState(millisUntilFinished)
             }
 
