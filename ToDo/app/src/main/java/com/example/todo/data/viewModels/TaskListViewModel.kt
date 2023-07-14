@@ -23,7 +23,6 @@ class TaskListViewModel @Inject constructor(
         refreshDataFromRepository()
     }
 
-
     private var todoItems: LiveData<List<TodoItem>> = itemsRepository.todoItemsList
     private var _eventNetworkError = MutableLiveData(false)
     private var _isNetworkErrorShown = MutableLiveData(false)

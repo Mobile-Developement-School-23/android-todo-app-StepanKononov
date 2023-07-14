@@ -6,11 +6,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -30,6 +29,7 @@ import androidx.lifecycle.coroutineScope
 import androidx.navigation.fragment.findNavController
 import com.example.todo.R
 import com.example.todo.TodoApplication
+import com.example.todo.data.extensions.convertToStringWithFormat
 import com.example.todo.data.model.TaskPriority
 import com.example.todo.data.model.TodoItem
 import com.example.todo.data.viewModels.TaskListViewModel
@@ -72,11 +72,9 @@ class TaskListFragment : Fragment() {
                         onItemClicked = { item -> navigateToEditTaskFragment(item.id) },
                         onToggleHideDoneTasks = { onHideTask(it) },
                         navigateToEditTask = { id -> navigateToEditTaskFragment(id) },
-                        onNetworkError = {}
                     )
                 }
             }
-
         }
     }
 
@@ -153,7 +151,7 @@ class TaskListFragment : Fragment() {
 
 
     @Composable
-    fun ItemTaskListAdapter(
+    fun TaskItemList(
         items: List<TodoItem>,
         onCompleteClicked: (TodoItem, Boolean) -> Unit,
         onItemClicked: (TodoItem) -> Unit,
@@ -166,7 +164,7 @@ class TaskListFragment : Fragment() {
                         enter = fadeIn() + slideInVertically(),
                         exit = fadeOut() + slideOutVertically()
                     ) {
-                        ItemTaskViewHolder(
+                        TaskItem(
                             todoItem = item,
                             onCompleteClicked = onCompleteClicked,
                             onItemClicked = onItemClicked,
@@ -180,7 +178,7 @@ class TaskListFragment : Fragment() {
 
 
     @Composable
-    fun ItemTaskViewHolder(
+    fun TaskItem(
         todoItem: TodoItem,
         onCompleteClicked: (TodoItem, Boolean) -> Unit,
         onItemClicked: (TodoItem) -> Unit,
@@ -224,7 +222,7 @@ class TaskListFragment : Fragment() {
 
                 if (todoItem.deadline != null) {
                     Text(
-                        text = todoItem.deadline.toString(),
+                        text = todoItem.deadline!!.convertToStringWithFormat(),
                         modifier = Modifier.padding(top = 4.dp)
                     )
                 }
@@ -254,18 +252,18 @@ class TaskListFragment : Fragment() {
         onItemClicked: (TodoItem) -> Unit,
         onToggleHideDoneTasks: (Boolean) -> Unit,
         navigateToEditTask: (String) -> Unit,
-        onNetworkError: () -> Unit,
     ) {
         val hideDoneTasks by viewModel.isDoneTaskHide.collectAsState()
         val doneTaskAmount by viewModel.getCompleteItemsCount().collectAsState()
         val list by viewModel.getAllItems().collectAsState()
         val showList = if (hideDoneTasks) list.filter { !it.isComplete } else list
 
-
+        var selected by remember { mutableStateOf(hideDoneTasks) }
+        val drawableResource = if (hideDoneTasks) R.drawable.ic_visibility_off else  R.drawable.ic_visibility_on
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text(text = "Мои дела", color = Color.Black) },
+                    title = { Text(text = stringResource(R.string.task_list_title), color = Color.Black) },
                     elevation = AppBarDefaults.TopAppBarElevation,
                 )
             },
@@ -291,16 +289,23 @@ class TaskListFragment : Fragment() {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Количество выполненных дел $doneTaskAmount",
+
+                            text = stringResource(R.string.amount_of_done_task).format(doneTaskAmount),
                             color = Color.Black
                         )
                         Spacer(modifier = Modifier.weight(1f))
-                        Checkbox(
-                            checked = hideDoneTasks,
-                            onCheckedChange = onToggleHideDoneTasks,
+
+                        Image(
+                            painter = painterResource(id = drawableResource),
+                            contentDescription = stringResource(R.string.visibile_checkbox),
+                            modifier = Modifier
+                                .padding(4.dp)
+                                .clickable {
+                                    selected = !selected
+                                    onToggleHideDoneTasks(selected)}
                         )
                     }
-                    ItemTaskListAdapter(
+                    TaskItemList(
                         items = showList,
                         onCompleteClicked = onCompleteClicked,
                         onItemClicked = onItemClicked

@@ -2,61 +2,79 @@ package com.example.todo.data.viewModels
 
 import android.util.Log
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.todo.data.TodoItemsRepository
 import com.example.todo.data.model.TaskPriority
 import com.example.todo.data.model.TodoItem
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
 
+
 class EditTaskViewModel @Inject constructor(
-    private val itemsRepository: TodoItemsRepository
+    private val itemsRepository: TodoItemsRepository,
 ) : ViewModel() {
 
-    private val _currentItem = MutableLiveData<TodoItem>()
-    val currentItem get() = _currentItem
+    private var _currentItem = createNewTask()
 
-    private var _isNewItem = true
-    val isNewItem get() = _isNewItem
+    private val _itemText = MutableStateFlow(_currentItem.text)
+    val itemText: StateFlow<String> = _itemText.asStateFlow()
+
+    private val _itemPriority = MutableStateFlow(_currentItem.priority)
+    val itemPriority: StateFlow<TaskPriority> = _itemPriority.asStateFlow()
+
+    private val _itemDeadline = MutableStateFlow(_currentItem.deadline)
+    val itemDeadline: StateFlow<Date?> = _itemDeadline.asStateFlow()
+
+    private var _isNewItem = MutableStateFlow(true)
+    val isNewItem = _isNewItem.asStateFlow()
 
     fun itemNotNew() {
-        _isNewItem = false
+        _isNewItem.value = false
     }
 
-    fun removeItem(todoItem: TodoItem) = deleteItem(todoItem)
+    fun removeItem() = deleteItem(_currentItem)
     fun retrieveItem(id: String): LiveData<TodoItem?> =
         itemsRepository.retrieveItem(id)
 
-    fun saveOrUpdateTask(item: TodoItem) {
-        if (_isNewItem)
-            insertItem(item)
+    fun saveOrUpdateTask() {
+        _currentItem.text = _itemText.value
+        _currentItem.priority = _itemPriority.value
+        _currentItem.deadline = _itemDeadline.value
+        if (_isNewItem.value)
+            insertItem(_currentItem)
         else
-            updateItem(item)
+            updateItem(_currentItem)
     }
 
-    fun createNewTask(id: String) {
-        if (_currentItem.value == null)
-            _currentItem.value = TodoItem(id, "", TaskPriority.MEDIUM, creationDate = Calendar.getInstance().time)
-    }
+    private fun createNewTask(): TodoItem =
+        TodoItem(UUID.randomUUID().toString(), "", TaskPriority.MEDIUM, creationDate = Calendar.getInstance().time)
+
 
     fun setTask(todoItem: TodoItem) {
-        _currentItem.value = todoItem
+        _currentItem = todoItem
+        _itemText.value = todoItem.text
+        _itemPriority.value = todoItem.priority
+        _itemDeadline.value = todoItem.deadline
     }
 
-
     fun setText(text: String) {
-        _currentItem.value?.text = text
+        _itemText.value = text
+        _currentItem.text = text
     }
 
     fun setDeadline(date: Date?) {
-        _currentItem.value?.deadline = date
+        _itemDeadline.value = date
+        _currentItem.deadline = date
     }
 
     fun setPriority(priorityIndex: Int) {
-        _currentItem.value?.priority = getTaskPriority(priorityIndex)
+        _itemPriority.value = getTaskPriority(priorityIndex)
+        _currentItem.priority = getTaskPriority(priorityIndex)
     }
 
     private fun deleteItem(item: TodoItem) {

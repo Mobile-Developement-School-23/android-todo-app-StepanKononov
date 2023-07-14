@@ -1,9 +1,11 @@
 package com.example.todo.data.extensions
 
+import com.example.todo.Constants
 import com.example.todo.data.model.TaskPriority
 import com.example.todo.data.model.TodoItem
 import com.example.todo.data.model.TodoItemEntity
 import com.example.todo.network.models.TodoItemResponse
+import java.text.SimpleDateFormat
 import java.util.*
 
 fun List<TodoItemResponse>.asDatabaseModel(): List<TodoItemEntity> {
@@ -44,3 +46,7 @@ fun TodoItem.asDomainModel(): TodoItemResponse {
     )
 }
 
+fun Date.convertToStringWithFormat(): String {
+    val dateFormat = SimpleDateFormat(Constants.DATA_PATTERN, Locale.getDefault())
+    return dateFormat.format(this)
+}
