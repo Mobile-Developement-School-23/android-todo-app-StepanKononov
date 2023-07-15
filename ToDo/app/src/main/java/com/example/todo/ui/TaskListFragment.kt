@@ -21,6 +21,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
@@ -218,7 +220,8 @@ class TaskListFragment : Fragment() {
                     text = todoItem.text,
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(end = 8.dp)
+                    modifier = Modifier.padding(end = 8.dp),
+                    style = TextStyle(textDecoration = if (todoItem.isComplete) TextDecoration.LineThrough else TextDecoration.None)
                 )
 
                 if (todoItem.deadline != null) {
@@ -293,7 +296,7 @@ class TaskListFragment : Fragment() {
                         Text(
                             modifier = Modifier.padding(16.dp),
                             text = stringResource(R.string.amount_of_done_task).format(doneTaskAmount),
-                            color = Color.Black
+                            color = MaterialTheme.colors.onSurface
                         )
                         Spacer(modifier = Modifier.weight(1f))
 
@@ -301,11 +304,12 @@ class TaskListFragment : Fragment() {
                             painter = painterResource(id = drawableResource),
                             contentDescription = stringResource(R.string.visibile_checkbox),
                             modifier = Modifier
-                                .padding(4.dp)
+                                .padding(16.dp)
                                 .clickable {
                                     selected = !selected
                                     onToggleHideDoneTasks(selected)
                                 }
+
                         )
                     }
                     TaskItemList(

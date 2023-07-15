@@ -7,11 +7,15 @@ import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
 
 private val DarkColorScheme = darkColors(
-    primary = lightGray,
-    secondary = lightGray,
-    )
-
-
+    background = darkGray,
+    surface = darkGraySecond,
+    primary = blue,
+    primaryVariant = purple700,
+    onPrimary = white,
+    secondary = blue,
+    secondaryVariant = violentDark,
+    onSecondary = white,
+)
 
 
 private val LightColorScheme = lightColors(
@@ -32,6 +36,7 @@ fun TodoAppTheme(
 ) {
     MaterialTheme(
         colors = if (darkTheme) DarkColorScheme else LightColorScheme,
+        typography = ,
         content = content
     )
 }
