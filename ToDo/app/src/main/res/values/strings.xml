@@ -8,7 +8,7 @@
     <string name="priority">Важность:</string>
     <string name="add_new_task">Add new task</string>
     <string name="network_error_message">Ошибка соединения. Загруженны данные из локального хранилища</string>
-    <string name="save_button_text">Save</string>
+    <string name="save_button_text">СОХРАНИТЬ</string>
     <string name="task_list_title">Мои дела</string>
     <string name="visibile_checkbox">Visibile checkbox</string>
 

@@ -33,8 +33,9 @@ import com.example.todo.data.viewModels.factory.EditTaskViewModelFactory
 import com.example.todo.di.components.FragmentComponent
 import com.example.todo.di.scope.FragmentScope
 import com.example.todocomposable.ui.theme.TodoAppTheme
+import com.example.todocomposable.ui.theme.red
+import com.example.todocomposable.ui.theme.white
 import com.google.android.material.datepicker.MaterialDatePicker
-import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
 
@@ -111,7 +112,6 @@ class EditTaskFragment : Fragment() {
     }
 
 
-
     private fun injectDependencies() {
         val application = (requireNotNull(this.activity).application as TodoApplication)
         fragmentComponent = application.appComponent.fragmentComponent().create()
@@ -121,6 +121,8 @@ class EditTaskFragment : Fragment() {
     @Composable
     private fun TopBar() {
         TopAppBar(
+            backgroundColor = MaterialTheme.colors.background,
+            elevation = 0.dp,
             title = { Text(text = "") },
             navigationIcon = {
                 IconButton(onClick = { findNavController().navigateUp() }) {
@@ -128,15 +130,17 @@ class EditTaskFragment : Fragment() {
                 }
             },
             actions = {
-                Button(
-                    onClick = {
-                        saveTask(viewModel.itemText.value)
-                        navigateToTaskListFragment()
-                    },
-                    modifier = Modifier.padding(end = 8.dp)
-                ) {
-                    Text(text = stringResource(R.string.save_button_text))
-                }
+                Text(
+                    text = stringResource(R.string.save_button_text),
+                    color = MaterialTheme.colors.primary,
+                    modifier = Modifier
+                        .padding(end = 8.dp)
+                        .clickable {
+                            saveTask(viewModel.itemText.value)
+                            navigateToTaskListFragment()
+                        }
+
+                )
             }
         )
     }
@@ -149,7 +153,7 @@ class EditTaskFragment : Fragment() {
             value = taskText,
             onValueChange = { text -> viewModel.setText(text) },
             modifier = Modifier.fillMaxWidth().heightIn(min = 150.dp).padding(8.dp),
-            label = { Text(text = stringResource(R.string.task_text_placeholder)) }
+            label = { Text(text = stringResource(R.string.task_text_placeholder)) },
         )
     }
 
@@ -244,9 +248,15 @@ class EditTaskFragment : Fragment() {
                 onClick = {
                     viewModel.removeItem()
                     navigateToTaskListFragment()
-                }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = red
+                )
             ) {
-                Text(text = stringResource(R.string.delete))
+                Text(
+                    text = stringResource(R.string.delete),
+                    color = white
+                )
             }
         }
     }
@@ -254,34 +264,38 @@ class EditTaskFragment : Fragment() {
     @Composable
     fun EditTaskScreen() {
         Scaffold(
-            topBar = { TopBar() }
-        ) { padding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(padding)
-            ) {
-                TaskTextField()
+            topBar = { TopBar() },
 
-                Spacer(modifier = Modifier.height(16.dp))
+            ) { padding ->
+            Box(modifier = Modifier.padding(16.dp)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(padding)
+                ) {
 
-                Text(
-                    text = stringResource(R.string.priority),
-                    modifier = Modifier.padding(top = 16.dp)
-                )
+                    TaskTextField()
 
-                PriorityDropdown()
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                Spacer(modifier = Modifier.height(32.dp))
+                    Text(
+                        text = stringResource(R.string.priority),
+                        modifier = Modifier.padding(top = 16.dp)
+                    )
 
-                Column {
-                    DeadlineSwitch()
+                    PriorityDropdown()
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    Column {
+                        DeadlineSwitch()
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    DeleteButton()
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                DeleteButton()
             }
         }
     }

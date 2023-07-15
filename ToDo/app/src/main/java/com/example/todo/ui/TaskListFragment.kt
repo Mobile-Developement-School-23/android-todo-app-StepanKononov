@@ -156,7 +156,8 @@ class TaskListFragment : Fragment() {
         onCompleteClicked: (TodoItem, Boolean) -> Unit,
         onItemClicked: (TodoItem) -> Unit,
     ) {
-        Card {
+        Card(modifier = Modifier.padding(16.dp)) {
+
             LazyColumn {
                 items(items = items, key = { it.id }) { item ->
                     AnimatedVisibility(
@@ -259,12 +260,13 @@ class TaskListFragment : Fragment() {
         val showList = if (hideDoneTasks) list.filter { !it.isComplete } else list
 
         var selected by remember { mutableStateOf(hideDoneTasks) }
-        val drawableResource = if (hideDoneTasks) R.drawable.ic_visibility_off else  R.drawable.ic_visibility_on
+        val drawableResource = if (hideDoneTasks) R.drawable.ic_visibility_off else R.drawable.ic_visibility_on
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text(text = stringResource(R.string.task_list_title), color = Color.Black) },
-                    elevation = AppBarDefaults.TopAppBarElevation,
+                    backgroundColor = MaterialTheme.colors.background,
+                    title = { Text(text = stringResource(R.string.task_list_title)) },
+                    elevation = 0.dp
                 )
             },
             floatingActionButton = {
@@ -289,7 +291,7 @@ class TaskListFragment : Fragment() {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-
+                            modifier = Modifier.padding(16.dp),
                             text = stringResource(R.string.amount_of_done_task).format(doneTaskAmount),
                             color = Color.Black
                         )
@@ -302,7 +304,8 @@ class TaskListFragment : Fragment() {
                                 .padding(4.dp)
                                 .clickable {
                                     selected = !selected
-                                    onToggleHideDoneTasks(selected)}
+                                    onToggleHideDoneTasks(selected)
+                                }
                         )
                     }
                     TaskItemList(
