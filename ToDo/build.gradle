@@ -9,6 +9,8 @@ buildscript {
         nav_version = "2.5.2"
         room_version = '2.5.0'
         work_version = "2.7.1"
+        dagger_version = "2.46.1"
+        compose_version = '1.2.0'
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:7.4.1'

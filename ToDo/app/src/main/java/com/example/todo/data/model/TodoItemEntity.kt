@@ -1,4 +1,4 @@
-package com.example.todo.model
+package com.example.todo.data.model
 
 import androidx.annotation.NonNull
 import androidx.room.ColumnInfo
@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 import java.util.*
 
 @Entity(tableName = "todo_items")
-data class TodoItem(
+data class TodoItemEntity(
     @PrimaryKey @NonNull @ColumnInfo(name = "id")
     val id: String,
     @NonNull @ColumnInfo(name = "text")
@@ -23,3 +23,25 @@ data class TodoItem(
     @ColumnInfo(name = "modified_date")
     var modifiedDate: Date? = null
 )
+
+fun TodoItem.asEntity() = TodoItemEntity(
+    id = id,
+    text = text,
+    priority = priority,
+    deadline = deadline,
+    isComplete = isComplete,
+    creationDate = creationDate,
+    modifiedDate = modifiedDate
+)
+
+fun TodoItemEntity.asExternalModel() = TodoItem(
+    id = id,
+    text = text,
+    priority = priority,
+    deadline = deadline,
+    isComplete = isComplete,
+    creationDate = creationDate,
+    modifiedDate = modifiedDate
+)
+
+fun List<TodoItemEntity>.asExternalModels() = map(TodoItemEntity::asExternalModel)

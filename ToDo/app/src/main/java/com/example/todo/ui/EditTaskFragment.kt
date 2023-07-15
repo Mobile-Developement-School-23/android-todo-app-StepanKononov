@@ -1,43 +1,53 @@
 package com.example.todo.ui
 
-import android.app.DatePickerDialog
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.todo.Constants
 import com.example.todo.R
 import com.example.todo.TodoApplication
-import com.example.todo.data.viewModels.TodoViewModel
-import com.example.todo.data.viewModels.TodoViewModelFactory
-import com.example.todo.databinding.FragmentEditTaskBinding
-import com.example.todo.model.TaskPriority
-import com.example.todo.model.TodoItem
-import java.text.SimpleDateFormat
+import com.example.todo.data.extensions.convertToStringWithFormat
+import com.example.todo.data.model.TaskPriority
+import com.example.todo.data.model.toPriorityString
+import com.example.todo.data.viewModels.EditTaskViewModel
+import com.example.todo.data.viewModels.factory.EditTaskViewModelFactory
+import com.example.todo.di.components.FragmentComponent
+import com.example.todo.di.scope.FragmentScope
+import com.example.todocomposable.ui.theme.TodoAppTheme
+import com.example.todocomposable.ui.theme.red
+import com.example.todocomposable.ui.theme.white
+import com.google.android.material.datepicker.MaterialDatePicker
 import java.util.*
+import javax.inject.Inject
 
-
+@FragmentScope
 class EditTaskFragment : Fragment() {
-    private var _binding: FragmentEditTaskBinding? = null
-    private val binding get() = _binding!!
-
-    private val _calendar = Calendar.getInstance()
-    private var _deadlineDate: Date? = null
-    private var _isNewTask = true
-
-    private lateinit var _taskID: String
-    private lateinit var _item: TodoItem
-
-    private val viewModel: TodoViewModel by activityViewModels {
-        val activity = requireNotNull(this.activity)
-        TodoViewModelFactory(
-            (activity.application as TodoApplication).database.todoAppDao(),
-            activity.application
-        )
+    @Inject
+    lateinit var viewModelFactory: EditTaskViewModelFactory
+    private val viewModel: EditTaskViewModel by viewModels {
+        viewModelFactory
     }
+    private lateinit var fragmentComponent: FragmentComponent
+    private lateinit var _taskID: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,155 +56,247 @@ class EditTaskFragment : Fragment() {
         }
     }
 
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        injectDependencies()
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
-        _binding = FragmentEditTaskBinding.inflate(inflater, container, false)
-        return binding.root
+        return ComposeView(requireContext()).apply {
+            setContent {
+                TodoAppTheme {
+                    EditTaskScreen()
+                }
+            }
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        viewModel.retrieveItem(_taskID).observe(this.viewLifecycleOwner) {selectedItem ->
-            if (selectedItem != null){
-                _item = selectedItem
-                _isNewTask = false
-            }
-            binding.deleteTaskButton.isEnabled = !_isNewTask
-            if (!_isNewTask)
-                updateViewForCurrentTask()
-            updateDeadlineView()
-        }
-
-        binding.deleteTaskButton.setOnClickListener {
-            if (!_isNewTask) {
-                viewModel.removeItem(_item)
-                val action = EditTaskFragmentDirections.actionEditTaskFragmentToTaskListFragment()
-                findNavController().navigate(action)
+        super.onViewCreated(view, savedInstanceState)
+        viewModel.retrieveItem(_taskID).observe(this.viewLifecycleOwner) { item ->
+            if (item != null) {
+                viewModel.setTask(item)
+                viewModel.itemNotNew()
             }
         }
-        binding.topAppBar.setNavigationIcon(R.drawable.ic_close)
-        binding.topAppBar.setNavigationOnClickListener { requireActivity().onNavigateUp() }
+    }
+
+    private fun navigateToTaskListFragment() {
+        val action = EditTaskFragmentDirections.actionEditTaskFragmentToTaskListFragment()
+        findNavController().navigate(action)
+    }
+
+    private fun saveTask(taskText: String) {
+        if (taskText.isNotBlank()) {
+            viewModel.saveOrUpdateTask()
+        }
+    }
+
+    private fun showDatePickerDialog() {
+        val builder = MaterialDatePicker.Builder.datePicker()
+        val picker = builder.build()
+        picker.addOnPositiveButtonClickListener { timestamp ->
+            val calendar = Calendar.getInstance()
+            calendar.timeInMillis = timestamp
+            updateDeadline(calendar.time)
+        }
+        picker.show(parentFragmentManager, picker.toString())
+    }
+
+    private fun updateDeadline(date: Date) {
+        viewModel.setDeadline(date)
+    }
 
 
-        binding.topAppBar.setOnMenuItemClickListener {
-            when (it.itemId) {
-                R.id.save_button -> {
-                    val stringInTextField = binding.taskEditText.text.toString()
-                    if (stringInTextField.isNotEmpty()) {
-                        setupTask(stringInTextField)
-                        val action = EditTaskFragmentDirections.actionEditTaskFragmentToTaskListFragment()
-                        findNavController().navigate(action)
-                    }
-                    true
+    private fun injectDependencies() {
+        val application = (requireNotNull(this.activity).application as TodoApplication)
+        fragmentComponent = application.appComponent.fragmentComponent().create()
+        fragmentComponent.inject(this)
+    }
+
+    @Composable
+    private fun TopBar() {
+        TopAppBar(
+            backgroundColor = MaterialTheme.colors.background,
+            elevation = 0.dp,
+            title = { Text(text = "") },
+            navigationIcon = {
+                IconButton(onClick = { findNavController().navigateUp() }) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = null)
                 }
-
-                else -> false
-            }
-        }
-
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
-
-
-    private fun createTaskItem(stringInTextField: String) = TodoItem(
-        id = _taskID,
-        text = stringInTextField,
-        creationDate = _calendar.time
-    )
-
-    private fun updateDeadlineView() {
-        binding.deadlineSwitch.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                _deadlineDate = choseDate()
-            } else {
-                _deadlineDate = null
-                binding.deadlineText.text = null
-            }
-        }
-    }
-
-    private fun setupTask(stringInTextField: String) {
-        if (_isNewTask)
-            _item = createTaskItem(stringInTextField)
-
-        _item.text = stringInTextField
-        _item.priority = getTaskPriority(binding.prioritySpinner.selectedItem.toString())
-        _item.deadline = _deadlineDate
-
-
-
-        if (_isNewTask)
-            viewModel.addTodoItem(_item)
-        else
-            viewModel.updateTodoItem(_item)
-    }
-
-    private fun updateViewForCurrentTask() {
-
-        binding.taskEditText.setText(_item.text)
-
-        updatePriority()
-
-        if (_item.deadline != null) {
-            binding.deadlineSwitch.isChecked = true
-            setDateInTextView(_item.deadline!!)
-        }
-    }
-
-    private fun updatePriority() {
-        val priorityTypeList = resources.getStringArray(R.array.task_priority_type)
-        binding.prioritySpinner.setSelection(priorityTypeList.indexOf(getPriorityString(_item.priority)))
-    }
-
-    private fun choseDate(): Date {
-        var date = Date()
-        val datePickerDialog = DatePickerDialog(
-            requireContext(),
-            { _, curYear, monthOfYear, dayOfMonth ->
-                val calendar = GregorianCalendar(curYear, monthOfYear, dayOfMonth)
-                date = calendar.time
-                setDateInTextView(date)
             },
-            _calendar.get(Calendar.YEAR),
-            _calendar.get(Calendar.MONTH),
-            _calendar.get(Calendar.DAY_OF_MONTH)
+            actions = {
+                Text(
+                    text = stringResource(R.string.save_button_text),
+                    color = MaterialTheme.colors.primary,
+                    modifier = Modifier
+                        .padding(end = 8.dp)
+                        .clickable {
+                            saveTask(viewModel.itemText.value)
+                            navigateToTaskListFragment()
+                        }
+
+                )
+            }
         )
-        datePickerDialog.show()
-
-        return date;
     }
 
-    private fun setDateInTextView(date: Date) {
-        val dateFormat = SimpleDateFormat(Constants.DATA_PATTERN, Locale.getDefault())
-        binding.deadlineText.text = dateFormat.format(date)
+    @Composable
+    private fun TaskTextField() {
+        val taskText: String by viewModel.itemText.collectAsState()
+
+        OutlinedTextField(
+            value = taskText,
+            onValueChange = { text -> viewModel.setText(text) },
+            modifier = Modifier.fillMaxWidth().heightIn(min = 150.dp).padding(8.dp),
+            label = { Text(text = stringResource(R.string.task_text_placeholder)) },
+        )
     }
 
+    @Composable
+    private fun PriorityDropdown() {
+        val itemPriority: TaskPriority by viewModel.itemPriority.collectAsState()
+        var priorityExpanded by remember { mutableStateOf(false) }
 
-    private fun getTaskPriority(selectedPriority: String): TaskPriority {
-        val priorityTypeList = resources.getStringArray(R.array.task_priority_type)
-
-        return when (selectedPriority) {
-            priorityTypeList[0] -> TaskPriority.MEDIUM
-            priorityTypeList[1] -> TaskPriority.LOW
-            else -> TaskPriority.HIGH
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { priorityExpanded = !priorityExpanded }
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            ) {
+                Text(
+                    text = itemPriority.toPriorityString(resources),
+                    modifier = Modifier.weight(1f)
+                )
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = null,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+            }
+            DropdownMenu(
+                expanded = priorityExpanded,
+                onDismissRequest = { priorityExpanded = false }
+            ) {
+                val priorityArray = resources.getStringArray(R.array.task_priority_type)
+                priorityArray.forEach { priority ->
+                    DropdownMenuItem(
+                        onClick = {
+                            viewModel.setPriority(priorityArray.indexOf(priority))
+                            priorityExpanded = false
+                        }
+                    ) {
+                        Text(text = priority)
+                    }
+                }
+            }
         }
     }
 
-    private fun getPriorityString(priority: TaskPriority): String {
-        val priorityTypeList = resources.getStringArray(R.array.task_priority_type)
+    @Composable
+    private fun DeadlineSwitch() {
+        val itemDeadline: Date? by viewModel.itemDeadline.collectAsState()
+        var datePickerVisible by remember { mutableStateOf(false) }
 
-        return when (priority) {
-            TaskPriority.MEDIUM -> priorityTypeList[0]
-            TaskPriority.LOW -> priorityTypeList[1]
-            else -> priorityTypeList[2]
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = stringResource(R.string.deadline_text),
+                modifier = Modifier.weight(1f)
+            )
+
+            Switch(
+                checked = itemDeadline != null,
+                onCheckedChange = {
+                    if (itemDeadline != null)
+                        viewModel.setDeadline(null)
+                    else
+                        showDatePickerDialog()
+                    datePickerVisible = !datePickerVisible
+                }
+            )
+        }
+        if (itemDeadline != null) {
+            Text(
+                text = itemDeadline!!.convertToStringWithFormat(),
+                modifier = Modifier.padding(start = 16.dp)
+            )
         }
     }
 
+    @Composable
+    private fun DeleteButton() {
+        val isNewItem: Boolean by viewModel.isNewItem.collectAsState()
 
+
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            Button(
+                enabled = !isNewItem,
+                onClick = {
+                    viewModel.removeItem()
+                    navigateToTaskListFragment()
+                },
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = red
+                )
+            ) {
+                Text(
+                    text = stringResource(R.string.delete),
+                    color = white
+                )
+            }
+        }
+    }
+
+    @Composable
+    fun EditTaskScreen() {
+        Scaffold(
+            topBar = { TopBar() },
+
+            ) { padding ->
+            Box(modifier = Modifier.padding(16.dp)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(padding)
+                ) {
+
+                    TaskTextField()
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = stringResource(R.string.priority),
+                        modifier = Modifier.padding(top = 16.dp)
+                    )
+
+                    PriorityDropdown()
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    Column {
+                        DeadlineSwitch()
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    DeleteButton()
+                }
+            }
+        }
+    }
 }

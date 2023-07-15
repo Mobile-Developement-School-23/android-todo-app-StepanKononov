@@ -1,6 +1,5 @@
 package com.example.todo.network.models
 
-import com.example.todo.network.models.TodoItemResponse
 import com.google.gson.annotations.SerializedName
 
 data class ServerResponse(

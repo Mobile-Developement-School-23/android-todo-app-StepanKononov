@@ -1,4 +1,4 @@
-package com.example.todo.model
+package com.example.todo.data.model
 
 import androidx.annotation.NonNull
 import androidx.room.ColumnInfo
