@@ -221,7 +221,11 @@ class TaskListFragment : Fragment() {
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(end = 8.dp),
-                    style = TextStyle(textDecoration = if (todoItem.isComplete) TextDecoration.LineThrough else TextDecoration.None)
+                    style = MaterialTheme.typography.body1.merge(
+                        TextStyle(
+                            textDecoration = if (todoItem.isComplete) TextDecoration.LineThrough else TextDecoration.None
+                        )
+                    )
                 )
 
                 if (todoItem.deadline != null) {
@@ -268,7 +272,12 @@ class TaskListFragment : Fragment() {
             topBar = {
                 TopAppBar(
                     backgroundColor = MaterialTheme.colors.background,
-                    title = { Text(text = stringResource(R.string.task_list_title)) },
+                    title = {
+                        Text(
+                            text = stringResource(R.string.task_list_title),
+                            style = MaterialTheme.typography.h3
+                        )
+                    },
                     elevation = 0.dp
                 )
             },
@@ -296,6 +305,7 @@ class TaskListFragment : Fragment() {
                         Text(
                             modifier = Modifier.padding(16.dp),
                             text = stringResource(R.string.amount_of_done_task).format(doneTaskAmount),
+                            style = MaterialTheme.typography.body2,
                             color = MaterialTheme.colors.onSurface
                         )
                         Spacer(modifier = Modifier.weight(1f))

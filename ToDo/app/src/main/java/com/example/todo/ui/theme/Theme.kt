@@ -5,6 +5,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
+import com.example.todo.ui.theme.appTypography
 
 private val DarkColorScheme = darkColors(
     background = darkGray,
@@ -36,7 +37,7 @@ fun TodoAppTheme(
 ) {
     MaterialTheme(
         colors = if (darkTheme) DarkColorScheme else LightColorScheme,
-        typography = ,
+        typography = appTypography,
         content = content
     )
 }
