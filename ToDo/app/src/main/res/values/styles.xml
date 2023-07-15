@@ -9,4 +9,49 @@
         <item name="android:minWidth">48dp</item>
         <item name="android:minHeight">48dp</item>
     </style>
+
+
+    <style name="Widget.App.CheckBox" parent="Widget.MaterialComponents.CompoundButton.CheckBox">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.CheckBox</item>
+    </style>
+
+    <style name="ThemeOverlay.App.CheckBox" parent="">
+        <item name="colorSecondary">@color/green</item>
+    </style>
+
+    <style name="Button.DeleteTaskButton" parent="Widget.MaterialComponents.Button">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:backgroundTint">@color/red</item>
+    </style>
+
+    <style name="ThemeOverlay.App.DatePicker" parent="@style/ThemeOverlay.MaterialComponents.MaterialCalendar">
+        <item name="colorPrimary">@color/blue</item>
+        <item name="colorOnPrimary">@color/white</item>>
+    </style>
+
+
+    <style name="BaseText" parent="TextAppearance.AppCompat">
+        <item name="android:textStyle">normal</item>
+        <item name="android:fontFamily">@font/roboto_family</item>
+    </style>
+
+    <style name="Text32" parent="BaseText">
+        <item name="android:textSize">32sp</item>
+    </style>
+
+    <style name="Text17" parent="BaseText">
+        <item name="android:textSize">17sp</item>
+    </style>
+    <style name="Text17.Blue" parent="Text17">
+        <item name="android:textSize">17sp</item>
+        <item name="android:color">@color/blue</item>
+    </style>
+
+    <style name="Text32.Bold" parent="Text32">
+        <item name="android:textStyle">bold</item>
+    </style>
+
+
+
+
 </resources>

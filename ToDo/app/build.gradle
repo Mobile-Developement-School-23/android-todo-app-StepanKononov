@@ -3,6 +3,8 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'androidx.navigation.safeargs.kotlin'
     id 'kotlin-kapt'
+    id 'kotlin-android'
+
 }
 
 android {
@@ -35,6 +37,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+
     }
 }
 
@@ -66,7 +69,8 @@ dependencies {
     implementation "com.squareup.okhttp3:okhttp:4.10.0"
     implementation "com.squareup.okhttp3:logging-interceptor:4.11.0"
 
+    // Dagger
     implementation "androidx.work:work-runtime-ktx:$work_version"
-
-
+    implementation "com.google.dagger:dagger:$dagger_version"
+    kapt "com.google.dagger:dagger-compiler:$dagger_version"
 }

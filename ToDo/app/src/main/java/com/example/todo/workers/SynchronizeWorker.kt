@@ -5,22 +5,39 @@ import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.todo.TodoApplication
-import com.example.todo.data.viewModels.TodoItemsRepository
+import com.example.todo.data.database.AppDatabase
+import com.example.todo.data.TodoItemsRepository
+import com.example.todo.di.scope.ActivityScope
+import javax.inject.Inject
 
 
 private const val TAG = "SynchronizeWorker"
 
-class SynchronizeWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, params) {
+@ActivityScope
+class SynchronizeWorker(
+    ctx: Context,
+    params: WorkerParameters,
+) : CoroutineWorker(ctx, params) {
+    @Inject
+    lateinit var database: AppDatabase
 
+    @Inject
+    lateinit var repository: TodoItemsRepository
     override suspend fun doWork(): Result {
+        injectDependencies()
+
         return try {
-            val repo = TodoItemsRepository(TodoApplication.getInstance().database)
-            repo.refreshData()
+            repository.refreshData()
             Result.success()
         } catch (throwable: Throwable) {
             Log.e(TAG, "Error synchronize data")
             Result.failure()
         }
+    }
+
+    private fun injectDependencies() {
+        val component = (applicationContext as TodoApplication).appComponent
+        component.workerComponent().create().inject(this)
     }
 
 }

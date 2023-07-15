@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="back_secondary" format="color|reference"/>
+    <attr name="on_back_secondary" format="color|reference"/>
+    <attr name="on_secondary_separator" format="color|reference"/>
+    <attr name="color_green" format="color|reference"/>
+    <attr name="button_active_background" format="color|reference"/>
+    <attr name="button_background" format="color|reference"/>
+    <attr name="menu_item_background" format="color|reference"/>
+</resources>

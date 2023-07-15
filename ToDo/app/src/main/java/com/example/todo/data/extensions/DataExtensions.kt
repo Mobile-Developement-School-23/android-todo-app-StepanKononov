@@ -1,13 +1,14 @@
 package com.example.todo.data.extensions
 
-import com.example.todo.model.TaskPriority
-import com.example.todo.model.TodoItem
+import com.example.todo.data.model.TaskPriority
+import com.example.todo.data.model.TodoItem
+import com.example.todo.data.model.TodoItemEntity
 import com.example.todo.network.models.TodoItemResponse
 import java.util.*
 
-fun List<TodoItemResponse>.asDatabaseModel(): List<TodoItem> {
+fun List<TodoItemResponse>.asDatabaseModel(): List<TodoItemEntity> {
     return map { todoItemResponse ->
-        TodoItem(
+        TodoItemEntity(
             id = todoItemResponse.id,
             text = todoItemResponse.text,
             priority = when (todoItemResponse.importance) {
